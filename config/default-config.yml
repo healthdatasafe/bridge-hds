@@ -1,8 +1,11 @@
 # The url exposed on the internet (ex via reverse proxy)
 baseURL: http://localhost:5432 # Exposed url no trailing '/'
 
+bridgeApiEndPoint: OVERRIDE_ME
+
 pryv: 
   serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
+  appId: 'bridge-chartneo'
 
 start:
   # if numProcesses=0 launch 1 process per CPU

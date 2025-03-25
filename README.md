@@ -23,7 +23,11 @@ A chartneo account is used for storage on HDS
 - `npm run setup`
 - `npm run setup-dev-env` (for dev environement)
 
-Edit `localConfig.yml` you may get inspiration from `./config/default-config.js`
+Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig.js`
+
+for the setting: `bridgeApiEndPoint`; if you don't know it or don't yet have a "managing account" dedicated to the bridge. You may use the following command to create it or retreive the apiEndpoint: 
+`node tools/createBridgeAccountUser.js --config ./localConfig.js`
+
 
 ### In production 
 

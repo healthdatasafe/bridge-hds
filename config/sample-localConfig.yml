@@ -12,3 +12,6 @@ pryv:
 
 # The url exposed on the internet (ex via reverse proxy)
 baseURL: https://your.site
+
+# The apiEndpoint to control your bridge account
+bridgeApiEndPoint: OVERRIDE_ME

@@ -1,4 +1,4 @@
-const { getConfig, getLogger } = require('./initBoiler')(`dpe:${process.pid}`);
+const { getConfig, getLogger } = require('./initBoiler')(`bridge:${process.pid}`);
 
 const cluster = require('cluster');
 const os = require('os');

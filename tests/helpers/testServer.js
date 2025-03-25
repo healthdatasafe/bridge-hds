@@ -1,5 +1,5 @@
 process.env.NODE_ENV = 'test';
-require('../../src/initBoiler')(`dpe:${process.pid}`);
+require('../../src/initBoiler')(`bridge:${process.pid}`);
 
 const request = require('supertest');
 const { getApp } = require('../../src/server');

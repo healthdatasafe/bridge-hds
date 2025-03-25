@@ -36,15 +36,20 @@ function service () {
 /**
  * Initialize Pryv service from config and creates a singleton
  * accessible via service()
+ * @returns {pryv.Service}
  */
 async function init () {
+  if (infosSingleton) return infosSingleton;
   config = (await getConfig()).get('pryv');
+  if (!config.appId) throw new Error('Cannot find appId in config');
   try {
     serviceSingleton = new pryv.Service(config.serviceInfoUrl);
     infosSingleton = await serviceSingleton.info();
+    return infosSingleton;
   } catch (err) {
     internalError('Failed connecting to Pryv instance', config);
   }
+  return null;
 }
 
 /**
@@ -57,21 +62,23 @@ async function init () {
 /**
  * Create a user on Pryv.io
  * @param {string} userId - desireg UserId for Prvy.io
+ * @param {string} password
  * @param {string} email
  * @returns {CreateUserResult}
  */
-async function createuser (userId, email) {
+async function createuser (username, password, email) {
   const host = await getHost();
-  const password = passwordGenerator.rnd();
-  const username = getNewUserId('u');
+  password = password || passwordGenerator.rnd();
+  username = username || getNewUserId('u');
+  email = email || username + '@hds.bogus';
   try {
     // create user
     const res = await pryv.utils.superagent.post(host + 'users')
       .send({
-        appId: 'bridge-chartneo-hds',
+        appId: config.appId,
         username,
         password,
-        email: email || username + '@hds.bogus',
+        email,
         invitationtoken: 'enjoy',
         languageCode: 'en',
         referer: 'none'
