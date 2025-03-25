@@ -3,8 +3,8 @@ const expressErrorLogger = require('boiler').getLogger('expressError');
 module.exports = {
   expressErrorHandler,
   assertValidEmail,
-  assertValidChartneoUserId,
-  assertFromChartneo,
+  assertValidpartnerUserId,
+  assertFromPartner,
   unkownRessource,
   unauthorized,
   badRequest,
@@ -15,7 +15,6 @@ module.exports = {
  * Middleware for express to manage errors
  */
 function expressErrorHandler (err, req, res, next) {
-  console.log(err);
   expressErrorLogger.error(err, err);
   // console.log(err);
   if (res.headersSent) {
@@ -66,7 +65,7 @@ function internalError (msg, obj) {
  * @returns {void}
  * @throws 401 Unathorized
  */
-function assertFromChartneo (req) {
+function assertFromPartner (req) {
   // if (req.headers[???] = ???? ) return;
   // const e = new Error('Unathorized');
   // e.statusCode = 401;
@@ -79,7 +78,7 @@ function assertFromChartneo (req) {
  * @returns {void}
  * @throws 400 Invalid patientId
  */
-function assertValidChartneoUserId (patientId) {
+function assertValidpartnerUserId (patientId) {
   if (patientId != null && validatePatientId(patientId)) return;
   const e = new Error(`Invalid patientId "${patientId}"`);
   e.statusCode = 400;

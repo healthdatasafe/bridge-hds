@@ -14,7 +14,7 @@ File: `chartneo-bridge-dev`
 server {
   server_name chartneo-bridge-dev.datasafe.dev;
 	location / {
-      proxy_pass  http://localhost:5432;
+      proxy_pass  http://localhost:7432;
       proxy_set_header    Host                $http_host;
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
@@ -43,7 +43,7 @@ Clone `bridge-chartneo-hds`
 - Edit `locaConfig.yml` and change `baseUrl` to `https://chartneo-bridge-dev.datsafe.dev`
 - run `screen -S chartneo` 
   1. from screen run `npm run start:prod`
-  2. from another terminal test install with `curl http://127.0.0.1:5432/` 
+  2. from another terminal test install with `curl http://127.0.0.1:7432/` 
      => should get "Found. Redirecting to ..."
   3. From a webpage open https://chartneo-bridge-dev.datsafe.dev
   4. You can now "detach" screen with Ctr+A  and Ctr+D, 

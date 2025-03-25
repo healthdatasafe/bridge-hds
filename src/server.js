@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 
 const pryvService = require('./lib/pryvService');
+const bridgeAccount = require('./lib/bridgeAccount');
 
 const userRouter = require('./routes/user');
 const { expressErrorHandler } = require('./errors');
@@ -25,6 +26,8 @@ async function getApp () {
   if (app != null) return app;
   // init pryv service singleton
   await pryvService.init();
+  // init bridge singleton
+  await bridgeAccount.init();
 
   app = express();
 
@@ -51,7 +54,7 @@ async function getApp () {
 async function launch () {
   const app = await getApp();
   const configServer = (await getConfig()).get('server');
-  const port = configServer.port || 5432;
+  const port = configServer.port || 7432;
   const host = configServer.host || '127.0.0.1';
   await app.listen(port, host);
   logger.info(`Listening ${host} on port ${port} in mode ${app.get('env')}`);

@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "description": "Bridge between Chartneo Backend and HDS",
   "scripts": {
-    "start": "node src/start.js",
+    "start": "node src/start.js --config localConfig.yml",
     "start:prod": "NODE_ENV=production node src/start.js --config localConfig.yml",
     "setup": "scripts/setup.sh",
     "setup-dev-env": "scripts/setup-dev-env.sh",
-    "test": "mocha tests --test-reporter=spec",
+    "test": "mocha tests --test-reporter=spec --config localConfig.yml",
     "test:coverage": "c8 mocha tests",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

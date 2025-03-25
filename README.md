@@ -23,7 +23,7 @@ A chartneo account is used for storage on HDS
 - `npm run setup`
 - `npm run setup-dev-env` (for dev environement)
 
-Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig.js`
+Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig.yml`
 
 for the setting: `bridgeApiEndPoint`; if you don't know it or don't yet have a "managing account" dedicated to the bridge. You may use the following command to create it or retreive the apiEndpoint: 
 `node tools/createBridgeAccountUser.js --config ./localConfig.js`
@@ -57,7 +57,7 @@ Read [./INSTALL.md](./INSTALL.md)
 
 - **@parms**
 
-  - `chatneoUserId`: ChartneoUserId 
+  - `chatneoUserId`: partnerUserId 
 
   - `returnURL`: The URL to return to 
 
@@ -66,11 +66,11 @@ Read [./INSTALL.md](./INSTALL.md)
   - `xxx`: a URL to follow the onBoarding process
 
 
-#### `GET /user/{chartneoUserId}/status`
+#### `GET /user/{partnerUserId}/status`
 
 - **@params**
 
-  - `chartneoUserId` (from URL)
+  - `partnerUserId` (from URL)
 
 - **@returns** (status code 404 if not found)
 
@@ -94,21 +94,30 @@ Read [./INSTALL.md](./INSTALL.md)
 
     Time is is milliseconds since 1970.
 
-#### `POST /user/{chartneoUserId}/data`
+#### `POST /user/{partnerUserId}/data`
 
 handles RAW Pryv event conversion 
 
 - **@spec [D1]**
 - **@params**
-  - `chartneoUserId` (from URL)
+  - `partnerUserId` (from URL)
   - `data` - To be defined
 - **@returns**
   - Returns - to be defined
+
 
 ### Functional specifications
 
 ##### Onboarding
 
+
+## Custom events-type 
+On pryv defaults events types are listed here: https://pryv.github.io/event-types/
+
+Here is the list of custom event-types used by the bridge
+
+- **sync-status** to record each synchronization status (use on user's streams)
+  - TODO
 
 ## Install
 

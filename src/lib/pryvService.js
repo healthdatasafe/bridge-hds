@@ -1,10 +1,12 @@
-const { getConfig } = require('boiler');
+const { getConfig, getLogger } = require('boiler');
 const pryv = require('pryv');
 const superagent = pryv.utils.superagent;
 
 const ShortUniqueId = require('short-unique-id');
 const { internalError } = require('../errors');
 const passwordGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 12 });
+
+const logger = getLogger('pryvService');
 
 module.exports = {
   init,
@@ -86,7 +88,7 @@ async function createuser (username, password, email) {
     if (res.body.apiEndpoint == null) throw new Error('Cannot find apiEndpoint in response');
     return { apiEndpoint: res.body.apiEndpoint, username: res.body.username, password };
   } catch (e) {
-    console.log('Failed creating user ', e.message);
+    logger.error('Failed creating user ', e.message);
     throw new Error('Failed creating user ' + host + 'users');
   }
 }

@@ -1,5 +1,5 @@
 # The url exposed on the internet (ex via reverse proxy)
-baseURL: http://localhost:5432 # Exposed url no trailing '/'
+baseURL: http://localhost:7432 # Exposed url no trailing '/'
 
 bridgeApiEndPoint: OVERRIDE_ME
 
@@ -14,7 +14,7 @@ start:
   numProcesses: 0 
 
 server:
-  port: 5432
+  port: 7432
   host: '0.0.0.0'
 
   logs: 
