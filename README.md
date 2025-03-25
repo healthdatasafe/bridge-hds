@@ -22,7 +22,6 @@ A chartneo account is used for storage on HDS
 - `npm install`
 - `npm run setup`
 - `npm run setup-dev-env` (for dev environement)
-- `npm rum init:db`
 
 Edit `localConfig.yml` you may get inspiration from `./config/default-config.js`
 
@@ -134,5 +133,3 @@ Please use `npm run lint` to validate your changes before commiting
 - Jsdoc is your friend
 - Pull Request is good, use it when you want reviews. If your confident with your code, just push (and tell others).
 - A sample test is present -- please write tests to achieve the best coverage.
-- When modifing the DB create migration scripts following [sequelize-cli doc](https://sequelize.org/docs/v6/other-topics/migrations/)
-- Don't stay stuck for more than 10min.. ask questions
