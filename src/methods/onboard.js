@@ -1,3 +1,5 @@
+const bridgeAccount = require('../lib/bridgeAccount');
+
 module.exports = {
   onboardProcess
 };
@@ -8,6 +10,7 @@ module.exports = {
  * @returns {string} URL to onboard the patient
  */
 async function onboardProcess (partnerUserId) {
+  // check if user already exists 
 
   // -- todo
 }

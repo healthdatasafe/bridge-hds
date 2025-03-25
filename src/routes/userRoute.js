@@ -5,7 +5,7 @@ const router = require('express-promise-router')();
 
 const errors = require('../errors/index.js');
 const onboard = require('../methods/onboard.js');
-const bridgeAccount = require('../lib/bridgeAccount');
+const user = require('../methods/user.js');
 
 /**
  * Onboarding
@@ -16,7 +16,7 @@ const bridgeAccount = require('../lib/bridgeAccount');
 router.post('/onboard/', async (req, res) => {
   errors.assertFromPartner(req);
   const partnerUserId = req.body.partnerUserId;
-  errors.assertValidpartnerUserId(chatneoUserId);
+  errors.assertValidpartnerUserId(partnerUserId);
   const processFollowingURL = await onboard.onboardProcess(partnerUserId);
   res.json({ processFollowingURL });
 });
@@ -26,7 +26,9 @@ router.post('/onboard/', async (req, res) => {
  */
 router.get('/:userId/status', async (req, res) => {
   errors.assertFromPartner(req);
-  const result = await bridgeAccount.userStatus(req.params.userId);
+  const partnerUserId = req.params.userId;
+  errors.assertValidpartnerUserId(partnerUserId);
+  const result = await user.status(partnerUserId);
   res.json(result);
 });
 

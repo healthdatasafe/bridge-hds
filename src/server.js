@@ -8,7 +8,7 @@ const cors = require('cors');
 const pryvService = require('./lib/pryvService');
 const bridgeAccount = require('./lib/bridgeAccount');
 
-const userRouter = require('./routes/user');
+const userRouter = require('./routes/userRoute');
 const { expressErrorHandler } = require('./errors');
 const loggerMiddleware = require('./middlewares/logger');
 
