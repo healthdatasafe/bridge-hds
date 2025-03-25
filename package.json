@@ -1,0 +1,43 @@
+{
+  "name": "bridge-chartneo-hds",
+  "version": "0.0.1",
+  "description": "Bridge between Chartneo Backend and HDS",
+  "scripts": {
+    "start": "node src/start.js",
+    "start:prod": "NODE_ENV=production node src/start.js --config localConfig.yml",
+    "setup": "scripts/setup.sh",
+    "setup-dev-env": "scripts/setup-dev-env.sh",
+    "init:db": "scripts/init-db.sh",
+    "test": "mocha tests --test-reporter=spec",
+    "test:coverage": "c8 mocha tests",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:change": "eslint $(git diff --name-only HEAD | grep -E '\\.(js|jsx)$' | xargs)"
+  },
+  "engines": {
+    "npm": ">=9.6.5",
+    "node": ">=20.9.0"
+  },
+  "author": "Clayver",
+  "license": "ULICENSED",
+  "dependencies": {
+    "boiler": "github:perki/pryv-boiler",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-promise-router": "^4.1.1",
+    "pryv": "^2.3.8",
+    "short-unique-id": "^5.2.0"
+  },
+  "devDependencies": {
+    "c8": "^9.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "^10.7.3",
+    "supertest": "^7.0.0",
+    "supertest-session": "^5.0.1"
+  }
+}

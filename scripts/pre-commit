@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+## Will be added to git hooks to make sure 
+## we don't commit not linted code
+cd bridge-pryv
+npm run lint:change

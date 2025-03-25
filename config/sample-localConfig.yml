@@ -1,0 +1,14 @@
+# sample localConfig
+# copied by script/setup.ch
+# 
+# Add custom data here 
+# used whend launched with `npm run start:prod``
+server:
+  host: '127.0.0.1'  # Only allow connection from localhost
+
+# The location of pryv server
+pryv: 
+  serviceInfoUrl: https://demo.datsafe.dev/reg/service/info
+
+# The url exposed on the internet (ex via reverse proxy)
+baseURL: https://your.site

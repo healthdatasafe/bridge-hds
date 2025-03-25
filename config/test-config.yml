@@ -1,0 +1,10 @@
+logs: 
+  console: 
+    active: false
+    level: info
+    format: 
+      color: true
+      time: false
+      aligned: true
+  file: 
+    active: false

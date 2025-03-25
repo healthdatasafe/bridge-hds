@@ -1,0 +1,6 @@
+/node_modules
+/application.log
+/coverage
+/storage
+/localConfig.yml
+storage-migrations/application.log

@@ -1,0 +1,27 @@
+# The url exposed on the internet (ex via reverse proxy)
+baseURL: http://localhost:5432 # Exposed url no trailing '/'
+
+pryv: 
+  serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
+
+start:
+  # if numProcesses=0 launch 1 process per CPU
+  # if numProcesses>0 launch exactly numProcess processes
+  # if numProcesses<0 launch max(numCPU + numProcess, 1) process(es)
+  numProcesses: 0 
+
+server:
+  port: 5432
+  host: '0.0.0.0'
+
+  logs: 
+  console: 
+    active: true
+    level: info
+    format: 
+      color: true
+      time: true
+      aligned: true
+  file: 
+    active: true
+    path: application.log
