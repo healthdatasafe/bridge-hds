@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer } = require('./helpers/testServer');
+const { init: initTestServer, apiTest } = require('./helpers/testServer');
 const ShortUniqueId = require('short-unique-id');
 
-describe('[ONBX] Onboarding', () => {
+describe('[ONBX] Onboarding Usrer', () => {
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
 
   before(async () => {
@@ -12,7 +12,11 @@ describe('[ONBX] Onboarding', () => {
   });
 
   it('[ONBU] POST /user/onboard', async () => {
-    assert.ok(testRnd);
+    const requestBody = {
+      partnerUserId: testRnd
+    };
+    const result = await apiTest().post('/user/onboard').send(requestBody);
+    console.log(result.body);
     // -- todo
   });
 });

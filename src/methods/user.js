@@ -2,8 +2,20 @@ const { bridgeConnection, streamIdForUserId } = require('../lib/bridgeAccount');
 const { unkownRessource } = require('../errors');
 
 module.exports = {
-  status
+  status,
+  exists
 };
+
+async function exists (partnerUserId) {
+  const streamUserId = streamIdForUserId(partnerUserId);
+  const apiCalls = [{
+    method: 'events.get',
+    params: { streams: [streamUserId], limit: 1, types: ['credentials/pryv-api-endpoint'] }
+  }];
+  const result = await bridgeConnection().api(apiCalls);
+  if (result[0]?.error?.id === 'unknown-referenced-resource') return false;
+  return true;
+}
 
 /**
  * @typedef {UserStatus}
