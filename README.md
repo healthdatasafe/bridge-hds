@@ -8,7 +8,7 @@ This code is currently running and deployed alongisde Pryv test server `chartneo
 
 **Main task:** Handles the communication between Chartneo backend and HDS 
 
-1. Provides URL with an `onboard Session Id` to be converted to QR to onboard a patient
+1. ...
 2. Handles Creation of Patient on Pryv.io if needed
 3. todo
 
@@ -27,7 +27,7 @@ Edit `localConfig.yml` you may get inspiration from `./config/default-config.js`
 
 ### In production 
 
-Read [./NOTES_INSTALL_PRYV_AND_BRIDGE.md](./NOTES_INSTALL_PRYV_AND_BRIDGE.md) 
+Read [./INSTALL.md](./INSTALL.md) 
 
 ### DEV 
 

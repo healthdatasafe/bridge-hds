@@ -3,7 +3,6 @@ const expressErrorLogger = require('boiler').getLogger('expressError');
 module.exports = {
   expressErrorHandler,
   assertValidEmail,
-  assertValidCaregivertId,
   assertValidChartneoUserId,
   assertFromChartneo,
   unkownRessource,
@@ -83,19 +82,6 @@ function assertFromChartneo (req) {
 function assertValidChartneoUserId (patientId) {
   if (patientId != null && validatePatientId(patientId)) return;
   const e = new Error(`Invalid patientId "${patientId}"`);
-  e.statusCode = 400;
-  throw e;
-}
-
-/**
- * Throws an error if the caregiverId is not in correct format
- * @param {Request} req
- * @returns {void}
- * @throws 400 Invalid caregiverId
- */
-function assertValidCaregivertId (caregiverId) {
-  if (caregiverId != null && validateCaregivertId(caregiverId)) return;
-  const e = new Error(`Invalid caregiverId "${caregiverId}"`);
   e.statusCode = 400;
   throw e;
 }
