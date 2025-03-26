@@ -48,5 +48,10 @@ describe('[ONBX] Onboarding User', () => {
     const changeSateBody = await changeStateResponse.json();
     assert.equal(changeSateBody.status, 'ACCEPTED');
     assert.equal(changeSateBody.apiEndpoint, newUser.appApiEndpoint);
+
+    // -- Phase 4 - Trigger return URL
+    const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboard.content.poll);
+    console.log(returnURLResponse);
+    // -- todo finalize flow
   });
 });

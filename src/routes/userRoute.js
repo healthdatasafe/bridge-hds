@@ -29,7 +29,7 @@ router.post('/onboard/', async (req, res) => {
  */
 router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
   // partnerUserId
-  const partnerUserId = req.prams.partnerUserId;
+  const partnerUserId = req.params.partnerUserId;
   errors.assertValidpartnerUserId(partnerUserId);
   const pollParam = req.query.prYvpoll;
 
@@ -39,8 +39,16 @@ router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
   const pollContent = await (await fetch(pollUrl)).json();
 
   // safety check that onboard process has started
-
-  res.json(pollContent);
+  const currentAuthStatuses = await onboard.authStatusesGet(partnerUserId);
+  const matchingStatuses = currentAuthStatuses.filter(s => s.content.poll === pollUrl);
+  if (matchingStatuses.length !== 1) {
+    // -- todo redirect to partner error page
+    errors.badRequest('No matching pending request for this user');
+  }
+  // -- todo add user to partner streams
+  // -- todo clean pending requests
+  // -- tosdo redirect user to sucess page
+  res.json({ pollContent, matchingStatuses });
 });
 
 /**

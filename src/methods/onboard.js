@@ -6,7 +6,7 @@ const { internalError } = require('../errors');
 module.exports = {
   init,
   onboardProcess,
-  authStatusGet
+  authStatusesGet
 };
 
 /**
@@ -78,15 +78,20 @@ async function onboardProcess (partnerUserId) {
 
 // ------ onboard steps
 
-async function authStatusGet (partnerUserId) {
+/**
+ * Get pending auth status (my be sevrals)
+ * @param {string} partnerUserId
+ * @returns {Array} of status
+ */
+async function authStatusesGet (partnerUserId) {
   const userStreamId = streamIdForUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
-    params: { streamIds: [userStreamId], types: ['temp-status/bridge-auth-request'] }
+    params: { streams: [userStreamId], types: ['temp-status/bridge-auth-request'] }
   }];
   const response = (await bridgeConnection().api(apiCalls))[0];
   // -- todo check response
-  return response;
+  return response.events || [];
 }
 
 async function authStatusStore (partnerUserId, responseBody) {
