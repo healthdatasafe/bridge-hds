@@ -119,6 +119,9 @@ Here is the list of custom event-types used by the bridge
 - **sync-status** to record each synchronization status (use on user's streams)
   - TODO
 
+- **temp-status/bridge-auth-request** to record each synchronization status (use on user's streams)
+  - content: result of https://pryv.github.io/reference/#auth-request
+
 ## Install
 
 Production: `npm run setup`

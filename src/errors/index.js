@@ -112,17 +112,6 @@ function validatePatientId (patientId) {
 }
 
 /**
- * Helper to validate a caregiverId
- * Maybe moved in a validator lib
- * @param {string} caregiverId
- * @returns {boolean}
- */
-function validateCaregivertId (caregiverId) {
-  // TODO
-  return (caregiverId != null && caregiverId.length > 3);
-}
-
-/**
  * Helper to validate an email
  * Maybe moved in a validator lib
  * @param {string} email

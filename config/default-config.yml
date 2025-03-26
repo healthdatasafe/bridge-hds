@@ -5,7 +5,16 @@ bridgeApiEndPoint: OVERRIDE_ME
 
 pryv: 
   serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
-  appId: 'bridge-chartneo'
+  appId: bridge-chartneo
+  mainStream: 
+    id: chartneo
+    name: Chartneo
+  permissions:
+    - streamId: chartneo
+      level: manage
+      defaultName: Chartneo
+  consentMessage: Connect HDS with Chartneo. -- to be detailed -- 
+
 
 start:
   # if numProcesses=0 launch 1 process per CPU

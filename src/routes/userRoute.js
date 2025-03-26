@@ -12,13 +12,35 @@ const user = require('../methods/user.js');
  * body:
  *  - returnUrl
  *  - partnerUserId
+ * result: @see https://pryv.github.io/reference/#authenticate-your-app
  */
 router.post('/onboard/', async (req, res) => {
   errors.assertFromPartner(req);
   const partnerUserId = req.body.partnerUserId;
   errors.assertValidpartnerUserId(partnerUserId);
-  const processFollowingURL = await onboard.onboardProcess(partnerUserId);
-  res.json({ processFollowingURL });
+  const onboardingProcess = await onboard.onboardProcess(partnerUserId);
+  res.json(onboardingProcess);
+});
+
+/**
+ * Onboarding
+ * returnURL of an onboarding process
+ * result: @see https://pryv.github.io/reference/#authenticate-your-app
+ */
+router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
+  // partnerUserId
+  const partnerUserId = req.prams.partnerUserId;
+  errors.assertValidpartnerUserId(partnerUserId);
+  const pollParam = req.query.prYvpoll;
+
+  // might be an Array ..
+  const pollUrl = Array.isArray(pollParam) ? pollParam[0] : pollParam;
+  if (pollUrl == null || !pollUrl.startsWith('http')) errors.badRequest('Missing or invalid prYvpoll URL');
+  const pollContent = await (await fetch(pollUrl)).json();
+
+  // safety check that onboard process has started
+
+  res.json(pollContent);
 });
 
 /**

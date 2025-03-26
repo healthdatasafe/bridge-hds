@@ -5,8 +5,12 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 
-const pryvService = require('./lib/pryvService');
-const bridgeAccount = require('./lib/bridgeAccount');
+// list (in order) async methods to be called.
+const initAsyncComponents = [
+  require('./lib/pryvService').init,
+  require('./lib/bridgeAccount').init,
+  require('./methods/onboard').init
+];
 
 const userRouter = require('./routes/userRoute');
 const { expressErrorHandler } = require('./errors');
@@ -24,10 +28,10 @@ let app = null;
  */
 async function getApp () {
   if (app != null) return app;
-  // init pryv service singleton
-  await pryvService.init();
-  // init bridge singleton
-  await bridgeAccount.init();
+  // initalize singletons
+  for (const init of initAsyncComponents) {
+    await init();
+  }
 
   app = express();
 

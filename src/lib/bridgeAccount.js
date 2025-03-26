@@ -8,10 +8,16 @@ const { internalError } = require('../errors');
 /** @type {Connection} - the connection to pryv bridge account */
 let _bridgeConnection;
 
+/** Stream that contains all users's streams */
+const USERS_STREAM_ID = 'users';
+/** Will prefix all users' streamsId  */
+const USER_STREAM_PREFIX = 'user-';
+
 module.exports = {
   init,
   bridgeConnection,
-  streamIdForUserId
+  streamIdForUserId,
+  USERS_STREAM_ID
 };
 
 /**
@@ -21,11 +27,6 @@ module.exports = {
 function bridgeConnection () {
   return _bridgeConnection;
 }
-
-/** Stream that contains all users's streams */
-const USERS_STREAM_ID = 'users';
-/** Will prefix all users' streamsId  */
-const USER_STREAM_PREFIX = 'user-';
 
 /**
  * Init the bridgeAccount

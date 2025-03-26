@@ -23,3 +23,6 @@ function initBoiler (appName) {
   });
   return boiler;
 }
+
+// load debug $$ in test mode
+if (process.env.NODE_ENV === 'test') require('./lib/debug');
