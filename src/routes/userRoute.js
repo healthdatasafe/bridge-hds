@@ -45,9 +45,16 @@ router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
     // -- todo redirect to partner error page
     errors.badRequest('No matching pending request for this user');
   }
-  // -- todo add user to partner streams
-  // -- todo clean pending requests
-  // -- tosdo redirect user to sucess page
+
+  // ACCEPTED
+  if (pollContent.status === 'ACCEPTED') {
+    // -- Add user credentials to partner streams
+    await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
+  }
+  // REMOVE pending request in background
+  process.nextTick(() => { onboard.authStatusesClean(currentAuthStatuses); });
+
+  // -- todo redirect user to sucess page
   res.json({ pollContent, matchingStatuses });
 });
 

@@ -11,6 +11,9 @@ function initBoiler (appName) {
     baseFilesDir: path.resolve(__dirname, '..'), // use for file:// relative path if not give cwd() will be used
     baseConfigDir: path.resolve(__dirname, '../config'),
     extraConfigs: [{
+      scope: 'extra-config',
+      file: path.resolve(__dirname, '../localConfig.yml')
+    }, {
       pluginAsync: {
         load: async function (store) {
           const storageDir = store.get('storage:files:directory') || './storage';

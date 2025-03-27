@@ -1,12 +1,15 @@
-const { getConfig } = require('boiler');
+const { getConfig, getLogger } = require('boiler');
 const { bridgeConnection, streamIdForUserId, USERS_STREAM_ID } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
 const { internalError } = require('../errors');
 
+const logger = getLogger('onboard');
+
 module.exports = {
   init,
   onboardProcess,
-  authStatusesGet
+  authStatusesGet,
+  authStatusesClean
 };
 
 /**
@@ -79,6 +82,10 @@ async function onboardProcess (partnerUserId) {
 // ------ onboard steps
 
 /**
+ * Set the
+ */
+
+/**
  * Get pending auth status (my be sevrals)
  * @param {string} partnerUserId
  * @returns {Array} of status
@@ -109,6 +116,24 @@ async function authStatusStore (partnerUserId, responseBody) {
   }];
   await bridgeConnection().api(apiCalls);
   // -- todo check response
+}
+
+/**
+ * Array of pending authStatus to remove
+ * @param {Array<Events>} authStatusEvents
+ */
+async function authStatusesClean (authStatusEvents) {
+  if (!authStatusEvents || authStatusEvents.length < 1) return;
+  const apiCalls = [];
+  for (const e of authStatusEvents) {
+    const deleteCall = { method: 'events.delete', params: { id: e.id } };
+    apiCalls.push(deleteCall, deleteCall); // twice for a real delete
+  }
+  const res = await bridgeConnection().api(apiCalls);
+  for (const r of res) {
+    if (r.error) logger.error('Failed deleting status event', r);
+    if (r.eventDeletion) logger.info(`Deleted status event id: ${r.eventDeletion.id}`);
+  }
 }
 
 // ------- helpers

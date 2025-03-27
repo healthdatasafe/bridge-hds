@@ -51,7 +51,7 @@ describe('[ONBX] Onboarding User', () => {
 
     // -- Phase 4 - Trigger return URL
     const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboard.content.poll);
-    console.log(returnURLResponse);
+    console.log(returnURLResponse.body);
     // -- todo finalize flow
   });
 });

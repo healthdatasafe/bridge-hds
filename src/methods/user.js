@@ -1,10 +1,31 @@
-const { bridgeConnection, streamIdForUserId } = require('../lib/bridgeAccount');
-const { unkownRessource } = require('../errors');
+const { bridgeConnection, streamIdForUserId, USERS_STREAM_ID } = require('../lib/bridgeAccount');
+const { unkownRessource, internalError } = require('../errors');
 
 module.exports = {
   status,
-  exists
+  exists,
+  addCredentialToBridgeAccount
 };
+
+/**
+ * Add user credentials to partner account
+ * @param {string} partnerUserId
+ * @param {string} appApiEndpoint
+ * @returns {Event} - the created event content
+ */
+async function addCredentialToBridgeAccount (partnerUserId, appApiEndpoint) {
+  const streamUserId = streamIdForUserId(partnerUserId);
+  const apiCalls = [{
+    method: 'streams.create',
+    params: { id: streamUserId, parentId: USERS_STREAM_ID, name: partnerUserId }
+  }, {
+    method: 'events.create',
+    params: { streamIds: [streamUserId], type: 'credentials/pryv-api-endpoint', content: appApiEndpoint }
+  }];
+  const result = await bridgeConnection().api(apiCalls);
+  if (result[1]?.error?.id) throw internalError('Failed add user credentials', result[1]);
+  return result[1];
+}
 
 async function exists (partnerUserId) {
   const streamUserId = streamIdForUserId(partnerUserId);

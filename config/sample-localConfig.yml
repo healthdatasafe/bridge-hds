@@ -6,12 +6,24 @@
 server:
   host: '127.0.0.1'  # Only allow connection from localhost
 
-# The location of pryv server
-pryv: 
-  serviceInfoUrl: https://demo.datsafe.dev/reg/service/info
-
 # The url exposed on the internet (ex via reverse proxy)
 baseURL: https://your.site
 
 # The apiEndpoint to control your bridge account
 bridgeApiEndPoint: OVERRIDE_ME
+
+
+partnerURLs:
+  webhookOnboard: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+  redirectUserOnSuccess: https://TO_BE_SET # Web page to redirect user on success
+  redirectUserOnFailure: https://TO_BE_SET # Web page to redirect user on failure
+
+pryv: 
+  serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
+  appId: bridge-partner # The id of your app
+  mainStreamId: partner-stream # Must have "mange" acess in permission set
+  permissions:
+    - streamId: partner-stream
+      level: manage
+      defaultName: Partner
+  consentMessage: Connect HDS with Partner. -- to be detailed -- 

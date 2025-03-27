@@ -57,7 +57,7 @@ Read [./INSTALL.md](./INSTALL.md)
 
 - **@parms**
 
-  - `chatneoUserId`: partnerUserId 
+  - `partnerUserId`: partnerUserId 
 
   - `returnURL`: The URL to return to 
 

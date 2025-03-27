@@ -3,17 +3,20 @@ baseURL: http://localhost:7432 # Exposed url no trailing '/'
 
 bridgeApiEndPoint: OVERRIDE_ME
 
+partnerURLs:
+  webhookOnboard: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+  redirectUserOnSuccess: https://TO_BE_SET # Web page to redirect user on success
+  redirectUserOnFailure: https://TO_BE_SET # Web page to redirect user on failure
+
 pryv: 
   serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
-  appId: bridge-chartneo
-  mainStream: 
-    id: chartneo
-    name: Chartneo
+  appId: bridge-partner
+  mainStreamId: partner-stream # Must have "mange" acess in permission set
   permissions:
-    - streamId: chartneo
+    - streamId: partner-stream
       level: manage
-      defaultName: Chartneo
-  consentMessage: Connect HDS with Chartneo. -- to be detailed -- 
+      defaultName: Partner
+  consentMessage: Connect HDS with Partner. -- to be detailed -- 
 
 
 start:

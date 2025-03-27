@@ -1,3 +1,27 @@
+server:
+  host: '127.0.0.1'  # Only allow connection from localhost
+
+partnerURLs:
+  webhookOnboard: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+  redirectUserOnSuccess: https://TO_BE_SET # Web page to redirect user on success
+  redirectUserOnFailure: https://TO_BE_SET # Web page to redirect user on failure
+
+pryv: 
+  serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
+  appId: bridge-test-suite
+  mainStreamId: bridge-test-suite
+  permissions:
+    - streamId: bridge-test-suite
+      level: manage
+      defaultName: Bridge test suite
+  consentMessage: Connect HDS with Bridge test suite. -- to be detailed -- 
+
+start:
+  # if numProcesses=0 launch 1 process per CPU
+  # if numProcesses>0 launch exactly numProcess processes
+  # if numProcesses<0 launch max(numCPU + numProcess, 1) process(es)
+  numProcesses: 1
+
 logs: 
   console: 
     active: false
