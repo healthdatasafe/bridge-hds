@@ -1,18 +1,24 @@
 /* eslint-env mocha */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, configGet, createUserAndPermissions } = require('./helpers/testServer');
+const { init: initTestServer, apiTest, configGet, createUserAndPermissions, startHttpServerCapture } = require('./helpers/testServer');
 const ShortUniqueId = require('short-unique-id');
 const pryv = require('pryv');
 
 describe('[ONBX] Onboarding User', () => {
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
-
+  let captureServer;
   before(async () => {
     await initTestServer();
+    captureServer = await startHttpServerCapture();
   });
 
-  it('[ONBU] POST /user/onboard', async () => {
+  after(async () => {
+    captureServer.close();
+  });
+
+  it('[ONBU] POST /user/onboard', async function () {
+    this.timeout(2000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = { partnerUserId };
@@ -51,7 +57,12 @@ describe('[ONBX] Onboarding User', () => {
 
     // -- Phase 4 - Trigger return URL
     const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboard.content.poll);
-    console.log(returnURLResponse.body);
-    // -- todo finalize flow
+    assert.equal(returnURLResponse.status, 302);
+    assert.equal(returnURLResponse.headers.location, 'https://success.domain');
+
+    // -- Finaly - Check that webhook has been called properly
+    const captured = captureServer.captured.pop();
+    assert.equal(captured.method, 'GET');
+    assert.equal(captured.url, `/?type=SUCCESS&partnerUserId=${partnerUserId}`);
   });
 });

@@ -90,12 +90,12 @@ const http = require('http');
  * See test-suite [TESX] to see how it works.
  * @param {Object} params
  * @param {Number} params.port - port to use
- * @returns {Object} captured: the caputures call, nextCalls: stack replies, close() - to close the server
+ * @returns {Object} captured: the captures call, nextCalls: stack replies, close() - to close the server
  */
 async function startHttpServerCapture (params) {
   const captured = [];
   const nextCalls = [];
-  const port = params?.port || 8654;
+  const port = params?.port || 8365;
   const host = '127.0.0.1';
   const server = http.createServer(onRequest);
   await require('util').promisify(server.listen).bind(server)(port, host);

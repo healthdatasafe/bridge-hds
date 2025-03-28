@@ -2,9 +2,13 @@ server:
   host: '127.0.0.1'  # Only allow connection from localhost
 
 partnerURLs:
-  webhookOnboard: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
-  redirectUserOnSuccess: https://TO_BE_SET # Web page to redirect user on success
-  redirectUserOnFailure: https://TO_BE_SET # Web page to redirect user on failure
+  webhookOnboard: 
+    url: http://127.0.0.1:8365/ # Call partner backend on sucess or failure of auth process
+    method: 'GET'
+    headers: 
+      secret: 'toto'
+  redirectUserOnSuccess: https://success.domain # Web page to redirect user on success
+  redirectUserOnFailure: https://failure.domain # Web page to redirect user on failure
 
 pryv: 
   serviceInfoUrl: https://demo.datasafe.dev/reg/service/info

@@ -4,7 +4,11 @@ baseURL: http://localhost:7432 # Exposed url no trailing '/'
 bridgeApiEndPoint: OVERRIDE_ME
 
 partnerURLs:
-  webhookOnboard: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+  webhookOnboard: 
+    url: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+    method: 'GET'
+    headers: 
+      secret: 'YOUR_SECRET'
   redirectUserOnSuccess: https://TO_BE_SET # Web page to redirect user on success
   redirectUserOnFailure: https://TO_BE_SET # Web page to redirect user on failure
 
