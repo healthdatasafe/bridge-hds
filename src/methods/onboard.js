@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const { bridgeConnection, streamIdForUserId, USERS_STREAM_ID } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForUserId, getUserParentStreamId } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
 const { internalError, badRequest } = require('../errors');
 const user = require('./user.js');
@@ -180,7 +180,7 @@ async function authStatusStore (partnerUserId, payload) {
   const userStreamId = streamIdForUserId(partnerUserId);
   const apiCalls = [{
     method: 'streams.create',
-    params: { id: userStreamId, parentId: USERS_STREAM_ID, name: partnerUserId }
+    params: { id: userStreamId, parentId: getUserParentStreamId(), name: partnerUserId }
   }, {
     method: 'events.create',
     params: {

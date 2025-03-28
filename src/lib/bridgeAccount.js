@@ -8,16 +8,20 @@ const { internalError } = require('../errors');
 /** @type {Connection} - the connection to pryv bridge account */
 let _bridgeConnection;
 
-/** Stream that contains all users's streams */
-const USERS_STREAM_ID = 'users';
 /** Will prefix all users' streamsId  */
-const USER_STREAM_PREFIX = 'user-';
+const PARENT_USER_STREAM_SUFFIX = '-users';
+
+const settings = {
+  mainStreamId: null,
+  userParentStreamId: null,
+  activeUsersStreamId: null
+};
 
 module.exports = {
   init,
   bridgeConnection,
   streamIdForUserId,
-  USERS_STREAM_ID
+  getUserParentStreamId
 };
 
 /**
@@ -33,14 +37,26 @@ function bridgeConnection () {
  */
 async function init () {
   if (_bridgeConnection) return;
-  const bridgeApiEndPoint = (await getConfig()).get('bridgeApiEndPoint');
+  const config = await getConfig();
+  const bridgeApiEndPoint = config.get('bridgeApiEndPoint');
   _bridgeConnection = new Connection(bridgeApiEndPoint);
   // check that access is valid
   const info = await _bridgeConnection.accessInfo();
   if (info?.permissions[0]?.streamId !== '*') {
     internalError('Bridge does not have master permissions', info);
   }
+  settings.mainStreamId = config.get('service:bridgeAccountMainStreamId');
+  settings.userParentStreamId = settings.mainStreamId + PARENT_USER_STREAM_SUFFIX;
+  settings.activeUsersStreamId = settings.userParentStreamId + '-active';
+  settings.errorStreamId = settings.mainStreamId + '-errors';
   await ensureBaseStreams();
+}
+
+/**
+ * Util to get the streamId of a partnerUserId
+ */
+function getUserParentStreamId () {
+  return settings.userParentStreamId;
 }
 
 /**
@@ -48,7 +64,7 @@ async function init () {
  */
 function streamIdForUserId (partnerUserId) {
   // if partnerUserId is not streamId compliant .. make it lowercase and alpha only.
-  return USER_STREAM_PREFIX + partnerUserId;
+  return settings.userParentStreamId + '-' + partnerUserId;
 }
 
 /**
@@ -57,7 +73,17 @@ function streamIdForUserId (partnerUserId) {
 async function ensureBaseStreams () {
   const apiCalls = [{
     method: 'streams.create',
-    params: { id: USERS_STREAM_ID, name: 'Users' }
+    params: { parentId: settings.mainStreamId, id: settings.userParentStreamId, name: 'Bridge Users' }
+  }, {
+    method: 'streams.create',
+    params: { parentId: settings.mainStreamId, id: settings.activeUsersStreamId, name: 'Active Bridge Users' }
+  }, {
+    method: 'streams.create',
+    params: { parentId: settings.mainStreamId, id: settings.errorStreamId, name: 'Bridge Errors' }
   }];
-  await _bridgeConnection.api(apiCalls);
+  const res = await _bridgeConnection.api(apiCalls);
+  const unexpectedErrors = res.filter(r => r.error && r.error.id !== 'item-already-exists');
+  if (unexpectedErrors.length > 0) {
+    internalError('Failed creating base streams', unexpectedErrors);
+  }
 }

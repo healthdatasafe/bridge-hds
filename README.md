@@ -73,11 +73,11 @@ An "Partner" account is used for storage on HDS
 
 This service, uses a standard user on HDS to store the states of the onboarding process, eventual errors during communication and finaly the authorized user credentials.
 
-Given a rootStream ID to be set in configuration file `service:bridge-test-suite` (default "bridge") a set of streams will be created using this streamId as prefix + '-'. 
+Given a rootStream ID to be set in configuration file `service:bridgeAccountMainStreamId` (default "bridge") a set of streams will be created using this streamId as prefix + '-'. 
 Exemple:
 - **bridge**
   - **bridge-users**
-    - **bride-user-{partnerUserId}**
+    - **bridge-user-{partnerUserId}**
       Each user will have it's own stream containing events of types: `temp-status/bridge-auth-request` and `credentials/pryv-api-endpoint`
   - **bridge-users-active**
     This stream is used for tagging, active `credentials/pryv-api-endpoint` as secondary stream
@@ -94,6 +94,7 @@ Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig
 
 for the setting: `bridgeApiEndPoint`; if you don't know it or don't yet have a "managing account" dedicated to the bridge. You may use the following command to create it or retreive the apiEndpoint: 
 `node tools/createBridgeAccountUser.js --config ./localConfig.js`
+The token, must have access with 'manage' acces rights to the corresponding to the setting `service:bridgeAccountMainStreamId`.
 
 
 ### In production 

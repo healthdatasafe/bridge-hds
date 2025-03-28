@@ -14,7 +14,7 @@ partnerURLs:
 service: 
   serviceInfoURL: https://demo.datasafe.dev/reg/service/info
   appId: bridge-partner
-  bridgeAccountMainStreamId: partner-stream # Must have "manage" acess in permission set
+  bridgeAccountMainStreamId: bridge # The root stream on the partner's bridge account
   userPermissionRequest:
     - streamId: partner-stream
       level: manage

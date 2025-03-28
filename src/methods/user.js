@@ -1,4 +1,4 @@
-const { bridgeConnection, streamIdForUserId, USERS_STREAM_ID } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForUserId, getUserParentStreamId } = require('../lib/bridgeAccount');
 const { unkownRessource, internalError } = require('../errors');
 
 module.exports = {
@@ -17,7 +17,7 @@ async function addCredentialToBridgeAccount (partnerUserId, appApiEndpoint) {
   const streamUserId = streamIdForUserId(partnerUserId);
   const apiCalls = [{
     method: 'streams.create',
-    params: { id: streamUserId, parentId: USERS_STREAM_ID, name: partnerUserId }
+    params: { id: streamUserId, parentId: getUserParentStreamId(), name: partnerUserId }
   }, {
     method: 'events.create',
     params: { streamIds: [streamUserId], type: 'credentials/pryv-api-endpoint', content: appApiEndpoint }
