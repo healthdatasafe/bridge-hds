@@ -21,11 +21,11 @@ partnerURLs:
       secret: 'YOUR_SECRET' # Add Headers you want to send alongisde the response
   defaultRedirectOnError: https://TO_BE_SET # A default redirect url in case of error need to be set
   
-pryv: 
+service: 
   serviceInfoURL: https://demo.datasafe.dev/reg/service/info
   appId: bridge-partner # The id of your app
-  mainStreamId: partner-stream # Must have "mange" acess in permission set
-  permissions:
+  bridgeAccountMainStreamId: partner-stream # Must have "mange" acess in permission set
+  userPermissionRequest:
     - streamId: partner-stream
       level: manage
       defaultName: Partner

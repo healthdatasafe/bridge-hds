@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 
 async function go () {
   const config = await getConfig();
-  const appId = config.get('pryv:appId');
+  const appId = config.get('service:appId');
 
   await pryvService.init();
   console.log('If needed create the bridge user and a master pryvApiEndpoint');

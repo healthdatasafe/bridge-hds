@@ -43,8 +43,8 @@ describe('[ONBX] Onboarding User', () => {
     assert.equal(resultOnboardResponse.code, 201);
     const returnURL = configGet('baseURL') + '/user/onboard/finalize/' + partnerUserId;
     assert.equal(resultOnboardResponse.returnURL, returnURL);
-    assert.deepEqual(resultOnboardResponse.requestedPermissions, configGet('pryv:permissions'));
-    assert.equal(resultOnboardResponse.requestingAppId, configGet('pryv:appId'));
+    assert.deepEqual(resultOnboardResponse.requestedPermissions, configGet('service:userPermissionRequest'));
+    assert.equal(resultOnboardResponse.requestingAppId, configGet('service:appId'));
 
     // -- Phase 2 - create user
     const hdsUserId = 'hds' + testRnd;

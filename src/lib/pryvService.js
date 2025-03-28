@@ -42,14 +42,14 @@ function service () {
  */
 async function init () {
   if (infosSingleton) return infosSingleton;
-  config = (await getConfig()).get('pryv');
+  config = (await getConfig()).get('service');
   if (!config.appId) throw new Error('Cannot find appId in config');
   try {
     serviceSingleton = new pryv.Service(config.serviceInfoURL);
     infosSingleton = await serviceSingleton.info();
     return infosSingleton;
   } catch (err) {
-    internalError('Failed connecting to Pryv instance', config);
+    internalError('Failed connecting to service instance', config);
   }
   return null;
 }

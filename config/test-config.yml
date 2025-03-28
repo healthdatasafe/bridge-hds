@@ -9,11 +9,11 @@ partnerURLs:
       secret: 'toto'
   defaultRedirectOnError: https://error.domain # A default redirect url in case of error need to be set
 
-pryv: 
+service: 
   serviceInfoURL: https://demo.datasafe.dev/reg/service/info
   appId: bridge-test-suite
-  mainStreamId: bridge-test-suite
-  permissions:
+  bridgeAccountMainStreamId: bridge
+  userPermissionRequest:
     - streamId: bridge-test-suite
       level: manage
       defaultName: Bridge test suite

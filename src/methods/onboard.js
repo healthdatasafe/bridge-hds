@@ -31,9 +31,9 @@ const settings = {
 // from Pryv service
 async function init () {
   const config = await getConfig();
-  settings.requestingAppId = config.get('pryv:appId');
-  settings.requestedPermissions = config.get('pryv:permissions');
-  settings.consentMessage = config.get('pryv:consentMessage');
+  settings.requestingAppId = config.get('service:appId');
+  settings.requestedPermissions = config.get('service:userPermissionRequest');
+  settings.consentMessage = config.get('service:consentMessage');
   validatePermissions(settings.requestedPermissions);
   settings.returnURL = config.get('baseURL') + '/user/onboard/finalize/';
 
