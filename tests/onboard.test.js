@@ -1,7 +1,8 @@
 /* eslint-env mocha */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, configGet, createUserAndPermissions, startHttpServerCapture } = require('./helpers/testServer');
+const { init: initTestServer, apiTest, configGet, createUserAndPermissions } = require('./helpers/testServer');
+const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 const ShortUniqueId = require('short-unique-id');
 const pryv = require('pryv');
 

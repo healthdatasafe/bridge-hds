@@ -5,7 +5,8 @@
  */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer, startHttpServerCapture } = require('./helpers/testServer');
+const { init: initTestServer } = require('./helpers/testServer');
+const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 
 describe('[TESX] Testing mockup server for webhooks', () => {
   let webServerCapture;
