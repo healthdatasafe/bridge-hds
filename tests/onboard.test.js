@@ -35,7 +35,11 @@ describe('[ONBX] Onboarding User', () => {
     };
     const resultOnboard = (await apiTest().post('/user/onboard').send(requestBody)).body;
     assert.equal(resultOnboard.type, 'authRequest');
-    const resultOnboardResponse = resultOnboard.content.responseBody;
+    assert.ok(resultOnboard.onboardingSecret.length === 24);
+    const onboardingSecret = resultOnboard.onboardingSecret;
+    assert.ok(resultOnboard.redirectUserURL.startsWith('https://'));
+    // resultOnboard.context is used for test and eventually to customize the process on client side
+    const resultOnboardResponse = resultOnboard.context.responseBody;
     assert.equal(resultOnboardResponse.code, 201);
     const returnURL = configGet('baseURL') + '/user/onboard/finalize/' + partnerUserId;
     assert.equal(resultOnboardResponse.returnURL, returnURL);
@@ -68,13 +72,18 @@ describe('[ONBX] Onboarding User', () => {
     assert.equal(changeSateBody.apiEndpoint, newUser.appApiEndpoint);
 
     // -- Phase 4 - Trigger return URL
-    const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboardResponse.poll);
+    const returnURLResponse = await apiTest().get(`/user/onboard/finalize/${partnerUserId}?prYvpoll=${resultOnboardResponse.poll}`);
     assert.equal(returnURLResponse.status, 302);
     assert.equal(returnURLResponse.headers.location, 'https://success.domain');
 
-    // -- Finaly - Check that webhook has been called properly
+    // -- Finaly 1 - Check that webhook has been called properly
     const captured = captureServer.captured.pop();
     assert.equal(captured.method, 'GET');
-    assert.equal(captured.url, `/?partnerUserId=${partnerUserId}&test=Hello+test&type=SUCCESS`);
+    assert.equal(captured.url, `/?partnerUserId=${partnerUserId}&onboardingSecret=${onboardingSecret}&test=Hello+test&type=SUCCESS`);
+
+    // -- Finaly 2 - Check that user is active
+    const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`);
+    assert.equal(userStatusResponse.body.user.active, true);
+    assert.equal(userStatusResponse.body.user.apiEndpoint, newUser.appApiEndpoint);
   });
 });

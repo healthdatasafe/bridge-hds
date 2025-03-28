@@ -94,9 +94,9 @@ function assertValidURL (url, extraMessage = '') {
  * @returns {void}
  * @throws 400 Invalid partnerId
  */
-function assertValidPartnerUserId (patientId) {
-  if (patientId != null && validatePatientId(patientId)) return;
-  const e = new Error(`Invalid userPartnerId "${patientId}"`);
+function assertValidPartnerUserId (partnerUserId) {
+  if (partnerUserId != null && validateUserPartnerId(partnerUserId)) return;
+  const e = new Error(`Invalid userPartnerId "${partnerUserId}"`);
   e.statusCode = 400;
   throw e;
 }
@@ -117,14 +117,13 @@ function assertValidEmail (email) {
 // ----------------  Validators --------------//
 
 /**
- * Helper to validate a patientId
+ * Helper to validate a userPartnerId
  * Maybe moved in a validator lib
- * @param {string} patientId
+ * @param {string} userPartnerId
  * @returns {boolean}
  */
-function validatePatientId (patientId) {
-  // TODO
-  return (patientId != null && patientId.length > 3);
+function validateUserPartnerId (userPartnerId) {
+  return (userPartnerId != null && userPartnerId.length > 3);
 }
 
 /**

@@ -38,7 +38,7 @@ async function init () {
   // check that access is valid
   const info = await _bridgeConnection.accessInfo();
   if (info?.permissions[0]?.streamId !== '*') {
-    internalError('Brdige does not have master permissions', info);
+    internalError('Bridge does not have master permissions', info);
   }
   await ensureBaseStreams();
 }

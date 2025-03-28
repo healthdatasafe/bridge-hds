@@ -4,3 +4,4 @@
 /storage
 /localConfig.yml
 storage-migrations/application.log
+**/.DS_Store

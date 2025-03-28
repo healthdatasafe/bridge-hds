@@ -58,7 +58,22 @@ async function status (partnerUserId) {
     method: 'events.get',
     params: { streams: [streamUserId], limit: 1, types: ['sync-status/bridge'] }
   }];
-  const result = await bridgeConnection().api(apiCalls);
-  if (result[0]?.error?.id === 'unknown-referenced-resource') unkownRessource('Unkown user', { userId: partnerUserId });
+  const resultFromBC = await bridgeConnection().api(apiCalls);
+  if (resultFromBC[0]?.error?.id === 'unknown-referenced-resource') unkownRessource('Unkown user', { userId: partnerUserId });
+  const userEvent = resultFromBC[0].events[0];
+  const syncEvent = resultFromBC[1].events[0];
+  const result = {
+    user: {
+      active: true,
+      partnerUserId,
+      apiEndpoint: userEvent.content,
+      created: userEvent.created,
+      modified: userEvent.modified
+    },
+    syncStatus: {
+      content: syncEvent?.content,
+      lastSync: syncEvent?.created
+    }
+  };
   return result;
 }

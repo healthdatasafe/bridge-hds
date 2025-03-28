@@ -4,6 +4,9 @@ const pryvService = require('../lib/pryvService');
 const { internalError, badRequest } = require('../errors');
 const user = require('./user.js');
 
+const ShortUniqueId = require('short-unique-id');
+const onboardingSecretGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 24 });
+
 const logger = getLogger('onboard');
 
 module.exports = {
@@ -72,13 +75,17 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   });
   const responseBody = await response.json();
 
+  const onboardingSecret = onboardingSecretGenerator.randomUUID();
+
   // -- store request intent
-  const initiateResult = { redirectURLs, webhookClientData, responseBody };
+  const initiateResult = { redirectURLs, webhookClientData, responseBody, onboardingSecret };
   await authStatusStore(partnerUserId, initiateResult);
 
   const result = {
     type: 'authRequest',
-    content: initiateResult
+    onboardingSecret,
+    redirectUserURL: responseBody.url,
+    context: initiateResult
   };
 
   return result;
@@ -99,7 +106,7 @@ async function finalize (partnerUserId, pollParam) {
       await webhookCall(settings.partnerURLs.webhookOnboard, { type: 'ERROR', partnerUserId, error: e.message, errorObject: e.errorObject });
       logger.error(e);
     }
-    // todo - log error to bridgeAccount
+    // todo - log error to bridgeAccount (use e.webhookParams if exists)
     // $$(e);
   }
   return settings.partnerURLs.defaultRedirectOnError;
@@ -125,7 +132,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
     badRequest('No matching pending request for this user');
   }
   const matchingStatusContent = matchingStatuses[0].content;
-  const webhookParams = Object.assign({ partnerUserId }, matchingStatusContent.webhookClientData);
+  const webhookParams = Object.assign({ partnerUserId, onboardingSecret: matchingStatusContent.onboardingSecret }, matchingStatusContent.webhookClientData);
 
   // REMOVE pending request in background
   process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
@@ -144,7 +151,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   webhookParams.type = 'CANCEL';
   webhookParams.status = pollContent.status;
   await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
-  return matchingStatuses[0].content.redirectURLs.cancel;
+  return matchingStatusContent.redirectURLs.cancel;
 }
 
 // ------ onboard steps
@@ -240,6 +247,7 @@ async function webhookCall (whSettings, params) {
     logger.error('Failed contacting partner backend', e);
     const e2 = new Error('Failed contacting partner backend');
     e2.skipWebHookCall = true;
+    e2.webhookParams = params;
     throw e2;
   }
 }

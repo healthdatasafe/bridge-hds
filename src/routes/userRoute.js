@@ -34,7 +34,7 @@ router.post('/onboard/', async (req, res) => {
 
 /**
  * Onboarding
- * returnURL of an onboarding process
+ * returnURL of an onboarding process (from User's consent page)
  * result: @see https://pryv.github.io/reference/#authenticate-your-app
  */
 router.get('/onboard/finalize/:partnerUserId', async (req, res) => {

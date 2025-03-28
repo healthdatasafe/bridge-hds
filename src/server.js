@@ -51,6 +51,7 @@ async function getApp () {
   return app;
 }
 
+/* c8 ignore start - Cannot be tested with supertest */
 /**
  * Launch a server instance
  * @returns {Express.Application}
@@ -64,5 +65,6 @@ async function launch () {
   logger.info(`Listening ${host} on port ${port} in mode ${app.get('env')}`);
   return app;
 }
+/* c8 ignore start */
 
 module.exports = { launch, getApp };
