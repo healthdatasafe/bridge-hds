@@ -102,8 +102,15 @@ async function startHttpServerCapture (params) {
   logger.info('Started webServerCapture on port: ' + port);
 
   async function close () {
-    server.close();
-    logger.info('Stoped webServerCapture on port: ' + port);
+    return new Promise((resolve) => {
+      server.close(() => {
+        resolve();
+        logger.info('Stopped webServerCapture on port: ' + port);
+      }
+      );
+      // Closes all connections, ensuring the server closes successfully
+      server.closeAllConnections();
+    });
   }
 
   async function onRequest (req, res) {

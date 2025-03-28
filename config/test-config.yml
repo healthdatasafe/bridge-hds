@@ -7,11 +7,10 @@ partnerURLs:
     method: 'GET'
     headers: 
       secret: 'toto'
-  redirectUserOnSuccess: https://success.domain # Web page to redirect user on success
-  redirectUserOnFailure: https://failure.domain # Web page to redirect user on failure
+  defaultRedirectOnError: https://error.domain # A default redirect url in case of error need to be set
 
 pryv: 
-  serviceInfoUrl: https://demo.datasafe.dev/reg/service/info
+  serviceInfoURL: https://demo.datasafe.dev/reg/service/info
   appId: bridge-test-suite
   mainStreamId: bridge-test-suite
   permissions:

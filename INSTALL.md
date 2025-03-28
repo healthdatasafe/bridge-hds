@@ -40,7 +40,7 @@ Clone `bridge-chartneo-hds`
 - Run:
   - `npm install`
   - `npm run setup`
-- Edit `locaConfig.yml` and change `baseUrl` to `https://chartneo-bridge-dev.datsafe.dev`
+- Edit `locaConfig.yml` and change `baseURL` to `https://chartneo-bridge-dev.datsafe.dev`
 - run `screen -S chartneo` 
   1. from screen run `npm run start:prod`
   2. from another terminal test install with `curl http://127.0.0.1:7432/` 

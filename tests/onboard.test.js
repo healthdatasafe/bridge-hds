@@ -13,27 +13,38 @@ describe('[ONBX] Onboarding User', () => {
     captureServer = await startHttpServerCapture();
   });
 
-  after(async () => {
-    captureServer.close();
+  after(async function () {
+    this.timeout(2000);
+    await captureServer.close();
   });
 
   it('[ONBU] POST /user/onboard', async function () {
     this.timeout(2000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
-    const requestBody = { partnerUserId };
+    const requestBody = {
+      partnerUserId,
+      redirectURLs: {
+        success: 'https://success.domain',
+        cancel: 'https://cancel.domain'
+      },
+      clientData: {
+        test: 'Hello test'
+      }
+    };
     const resultOnboard = (await apiTest().post('/user/onboard').send(requestBody)).body;
     assert.equal(resultOnboard.type, 'authRequest');
-    assert.equal(resultOnboard.content.code, 201);
+    const resultOnboardResponse = resultOnboard.content.responseBody;
+    assert.equal(resultOnboardResponse.code, 201);
     const returnURL = configGet('baseURL') + '/user/onboard/finalize/' + partnerUserId;
-    assert.equal(resultOnboard.content.returnURL, returnURL);
-    assert.deepEqual(resultOnboard.content.requestedPermissions, configGet('pryv:permissions'));
-    assert.equal(resultOnboard.content.requestingAppId, configGet('pryv:appId'));
+    assert.equal(resultOnboardResponse.returnURL, returnURL);
+    assert.deepEqual(resultOnboardResponse.requestedPermissions, configGet('pryv:permissions'));
+    assert.equal(resultOnboardResponse.requestingAppId, configGet('pryv:appId'));
 
     // -- Phase 2 - create user
     const hdsUserId = 'hds' + testRnd;
-    const permissions = resultOnboard.content.requestedPermissions;
-    const appId = resultOnboard.content.requestingAppId;
+    const permissions = resultOnboardResponse.requestedPermissions;
+    const appId = resultOnboardResponse.requestingAppId;
     const newUser = await createUserAndPermissions(hdsUserId, permissions, appId);
 
     // -- Phase 3 - simulate access change state
@@ -43,7 +54,7 @@ describe('[ONBX] Onboarding User', () => {
       username: newUser.username,
       token: pryv.utils.extractTokenAndAPIEndpoint(newUser.appApiEndpoint).token
     };
-    const changeStateResponse = await fetch(resultOnboard.content.poll, {
+    const changeStateResponse = await fetch(resultOnboardResponse.poll, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -56,13 +67,13 @@ describe('[ONBX] Onboarding User', () => {
     assert.equal(changeSateBody.apiEndpoint, newUser.appApiEndpoint);
 
     // -- Phase 4 - Trigger return URL
-    const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboard.content.poll);
+    const returnURLResponse = await apiTest().get('/user/onboard/finalize/' + partnerUserId + '?prYvpoll=' + resultOnboardResponse.poll);
     assert.equal(returnURLResponse.status, 302);
     assert.equal(returnURLResponse.headers.location, 'https://success.domain');
 
     // -- Finaly - Check that webhook has been called properly
     const captured = captureServer.captured.pop();
     assert.equal(captured.method, 'GET');
-    assert.equal(captured.url, `/?type=SUCCESS&partnerUserId=${partnerUserId}`);
+    assert.equal(captured.url, `/?partnerUserId=${partnerUserId}&test=Hello+test&type=SUCCESS`);
   });
 });

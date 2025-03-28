@@ -1,10 +1,13 @@
 const expressErrorLogger = require('boiler').getLogger('expressError');
 
+const REGEXP_URL = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/;
+
 module.exports = {
   expressErrorHandler,
   assertValidEmail,
-  assertValidpartnerUserId,
+  assertValidPartnerUserId,
   assertFromPartner,
+  assertValidURL,
   unkownRessource,
   unauthorized,
   badRequest,
@@ -73,14 +76,27 @@ function assertFromPartner (req) {
 }
 
 /**
- * Throws an error if the patientId is not in correct format
- * @param {Request} req
+ * Throws an error a string is not a url
+ * @param {string} url
  * @returns {void}
- * @throws 400 Invalid patientId
+ * @throws 400 Invalid URL
  */
-function assertValidpartnerUserId (patientId) {
+function assertValidURL (url, extraMessage = '') {
+  if (REGEXP_URL.test(url)) return;
+  const e = new Error(`Invalid url "${url}" ${extraMessage}`);
+  e.statusCode = 400;
+  throw e;
+}
+
+/**
+ * Throws an error if the partnerId is not in correct format
+ * @param {string} patientId
+ * @returns {void}
+ * @throws 400 Invalid partnerId
+ */
+function assertValidPartnerUserId (patientId) {
   if (patientId != null && validatePatientId(patientId)) return;
-  const e = new Error(`Invalid patientId "${patientId}"`);
+  const e = new Error(`Invalid userPartnerId "${patientId}"`);
   e.statusCode = 400;
   throw e;
 }

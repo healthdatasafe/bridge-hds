@@ -16,7 +16,7 @@ describe('[TESX] Testing mockup server for webhooks', () => {
   });
 
   after(async () => {
-    webServerCapture.close();
+    await webServerCapture.close();
   });
 
   it(`[TESW] POST http://localhost:${port}/test`, async () => {

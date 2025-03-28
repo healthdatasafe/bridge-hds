@@ -57,13 +57,15 @@ Read [./INSTALL.md](./INSTALL.md)
 
 - **@parms**
 
-  - `partnerUserId`: partnerUserId 
-
-  - `returnURL`: The URL to return to 
+  - `partnerUserId`: {string} partnerUserId 
+  - `redirectURLs`: {Object} with 3 returnURL
+    - `sucess`: {string} in case of success
+    - `cancel`: {string}in case of cancel of operation by user
+  - `clientData`: {Object} - key value object to be sent back as query params or body of the webhook
 
 - **@returns**
 
-  - `xxx`: a URL to follow the onBoarding process
+  - `xxx`: a URL to follow the onBoarding process (usage optional)
 
 
 #### `GET /user/{partnerUserId}/status`

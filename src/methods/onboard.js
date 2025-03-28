@@ -20,7 +20,7 @@ module.exports = {
 const settings = {
   requestingAppId: null,
   requestedPermissions: null,
-  apiAccessUrl: null,
+  apiAccessURL: null,
   returnURL: null,
   consentMessage: null,
   partnerURLs: null
@@ -34,7 +34,7 @@ async function init () {
   validatePermissions(settings.requestedPermissions);
   settings.returnURL = config.get('baseURL') + '/user/onboard/finalize/';
 
-  settings.apiAccessUrl = (await pryvService.service().info()).access;
+  settings.apiAccessURL = (await pryvService.service().info()).access;
   settings.partnerURLs = config.get('partnerURLs');
 }
 
@@ -43,7 +43,7 @@ async function init () {
  * @param {string} partnerUserId
  * @returns {string} URL to onboard the patient
  */
-async function initiate (partnerUserId) {
+async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   // check if user is active
 
   // -- todo
@@ -62,7 +62,7 @@ async function initiate (partnerUserId) {
             }
       }
   };
-  const response = await fetch(settings.apiAccessUrl, {
+  const response = await fetch(settings.apiAccessURL, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -73,11 +73,12 @@ async function initiate (partnerUserId) {
   const responseBody = await response.json();
 
   // -- store request intent
-  await authStatusStore(partnerUserId, responseBody);
+  const initiateResult = { redirectURLs, webhookClientData, responseBody };
+  await authStatusStore(partnerUserId, initiateResult);
 
   const result = {
     type: 'authRequest',
-    content: responseBody
+    content: initiateResult
   };
 
   return result;
@@ -91,7 +92,7 @@ async function initiate (partnerUserId) {
  */
 async function finalize (partnerUserId, pollParam) {
   try {
-    return await finalizeToBeCatch(partnerUserId, pollParam);
+    return await finalizeToBeCatched(partnerUserId, pollParam);
   } catch (e) {
     if (!e.skipWebHookCall) {
       // call webhook
@@ -101,7 +102,7 @@ async function finalize (partnerUserId, pollParam) {
     // todo - log error to bridgeAccount
     // $$(e);
   }
-  return settings.partnerURLs.redirectUserOnFailure;
+  return settings.partnerURLs.defaultRedirectOnError;
 }
 
 /**
@@ -110,32 +111,40 @@ async function finalize (partnerUserId, pollParam) {
  * @param {string} pollParam
  * @returns url
  */
-async function finalizeToBeCatch (partnerUserId, pollParam) {
+async function finalizeToBeCatched (partnerUserId, pollParam) {
   // might be an Array ..
-  const pollUrl = Array.isArray(pollParam) ? pollParam[0] : pollParam;
-  if (pollUrl == null || !pollUrl.startsWith('http')) badRequest('Missing or invalid prYvpoll URL');
-  const pollContent = await (await fetch(pollUrl)).json();
+  const pollURL = Array.isArray(pollParam) ? pollParam[0] : pollParam;
+  if (pollURL == null || !pollURL.startsWith('http')) badRequest('Missing or invalid prYvpoll URL');
+  const pollContent = await (await fetch(pollURL)).json();
 
   // safety check that onboard process has started
   const currentAuthStatuses = await authStatusesGet(partnerUserId);
-  const matchingStatuses = currentAuthStatuses.filter(s => s.content.poll === pollUrl);
+  const matchingStatuses = currentAuthStatuses.filter(s => s.content.responseBody.poll === pollURL);
   if (matchingStatuses.length !== 1) {
     // -- todo redirect to partner error page
     badRequest('No matching pending request for this user');
   }
+  const matchingStatusContent = matchingStatuses[0].content;
+  const webhookParams = Object.assign({ partnerUserId }, matchingStatusContent.webhookClientData);
+
+  // REMOVE pending request in background
+  process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
 
   // ACCEPTED
   if (pollContent.status === 'ACCEPTED') {
     // -- Add user credentials to partner streams
     await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
+    webhookParams.type = 'SUCCESS';
+    // call webhook
+    await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
+    return matchingStatusContent.redirectURLs.success;
   }
-  // REMOVE pending request in background
-  process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
 
-  // call webhook
-  await webhookCall(settings.partnerURLs.webhookOnboard, { type: 'SUCCESS', partnerUserId });
-
-  return settings.partnerURLs.redirectUserOnSuccess;
+  // CANCELLED
+  webhookParams.type = 'CANCEL';
+  webhookParams.status = pollContent.status;
+  await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
+  return matchingStatuses[0].content.redirectURLs.cancel;
 }
 
 // ------ onboard steps
@@ -160,7 +169,7 @@ async function authStatusesGet (partnerUserId) {
   return response.events || [];
 }
 
-async function authStatusStore (partnerUserId, responseBody) {
+async function authStatusStore (partnerUserId, payload) {
   const userStreamId = streamIdForUserId(partnerUserId);
   const apiCalls = [{
     method: 'streams.create',
@@ -170,11 +179,12 @@ async function authStatusStore (partnerUserId, responseBody) {
     params: {
       type: 'temp-status/bridge-auth-request',
       streamIds: [userStreamId],
-      content: responseBody
+      content: payload
     }
   }];
-  await bridgeConnection().api(apiCalls);
-  // -- todo check response
+  const response = await bridgeConnection().api(apiCalls);
+  if (!response[1].event || response[1].error) internalError('Failed storing auth status', response[1]);
+  return response[1].event;
 }
 
 /**

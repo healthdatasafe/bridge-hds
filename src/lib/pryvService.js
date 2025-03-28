@@ -45,7 +45,7 @@ async function init () {
   config = (await getConfig()).get('pryv');
   if (!config.appId) throw new Error('Cannot find appId in config');
   try {
-    serviceSingleton = new pryv.Service(config.serviceInfoUrl);
+    serviceSingleton = new pryv.Service(config.serviceInfoURL);
     infosSingleton = await serviceSingleton.info();
     return infosSingleton;
   } catch (err) {
