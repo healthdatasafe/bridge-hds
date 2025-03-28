@@ -42,8 +42,10 @@ async function init () {
   _bridgeConnection = new Connection(bridgeApiEndPoint);
   // check that access is valid
   const info = await _bridgeConnection.accessInfo();
-  if (info?.permissions[0]?.streamId !== '*') {
-    internalError('Bridge does not have master permissions', info);
+  if (info?.permissions[0]?.streamId !== settings.mainStreamId &&
+      info?.permissions[0]?.level !== 'manage'
+  ) {
+    internalError(`Bridge does not have "manage" permissions on stream ${settings.mainStreamId}`, info);
   }
   settings.mainStreamId = config.get('service:bridgeAccountMainStreamId');
   settings.userParentStreamId = settings.mainStreamId + PARENT_USER_STREAM_SUFFIX;

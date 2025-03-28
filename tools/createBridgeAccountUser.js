@@ -38,27 +38,39 @@ async function go () {
     params: { }
   }];
   const resCheckApp = await personalConnection.api(apiCallCheckApp);
-  console.log(resCheckApp[0].accesses);
+  // filter for app access
   const foundAccess = resCheckApp[0].accesses.find((a) => (a.name === appId && a.type === 'app'));
   if (foundAccess != null) {
     console.log('Found existing: ' + foundAccess.apiEndpoint);
-  } else {
-    // create master token
-    const accessRequest = {
-      method: 'accesses.create',
-      params: {
-        type: 'app',
-        name: appId,
-        permissions: [
-          { streamId: '*', level: 'manage' }
-        ]
-      }
-    };
-    const apiCalls = [accessRequest];
-    const res = await personalConnection.api(apiCalls);
-    const appApiEndpoint = res[0].access?.apiEndpoint;
-    console.log('Created: ' + appApiEndpoint);
+    console.log('With permissions: ', foundAccess.permissions);
+    const delYN = await ask('Delete and create a new one? y/n: ');
+    if (delYN === 'y') {
+      const apiCalls = [{
+        method: 'accesses.delete',
+        params: { id: foundAccess.id }
+      }];
+      const res = await personalConnection.api(apiCalls);
+      console.log('Deleted: ', res[0]);
+    } else {
+      rl.close();
+      return;
+    }
   }
+  // create master token
+  const accessRequest = {
+    method: 'accesses.create',
+    params: {
+      type: 'app',
+      name: appId,
+      permissions: [
+        { streamId: 'bridge', defaultName: 'Bridge', level: 'manage' }
+      ]
+    }
+  };
+  const apiCalls = [accessRequest];
+  const res = await personalConnection.api(apiCalls);
+  const appApiEndpoint = res[0].access?.apiEndpoint;
+  console.log('Created: ' + appApiEndpoint);
   rl.close();
 }
 
