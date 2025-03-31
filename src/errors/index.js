@@ -63,7 +63,7 @@ function internalError (msg, obj) {
 // ----------------- Asserts ---------------- //
 
 /**
- * Throw an error if call is not from Chartneo backend
+ * Throw an error if call is not from Partner backend
  * @param {Request} req
  * @returns {void}
  * @throws 401 Unathorized

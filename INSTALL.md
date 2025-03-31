@@ -1,18 +1,16 @@
-# Install notes for Pryv + Bridge on the same VM
-
-Names should point to the same IP  `chartneo-bridge-dev.datasafe.dev` and  `demo.datasafe.dev` 
+# Install notes 
 
 ## Machine should be prepared like for Open-Pryv.io
 
-## Add chartneo-bridge-dev to nginx
+## Add {èartner}-bridge-dev to nginx
 
 Add the folowing files "as root" to `/etc/nginx/sites-enabled`
 
-File: `chartneo-bridge-dev`
+File: `{partner}-bridge-dev`
 
 ```
 server {
-  server_name chartneo-bridge-dev.datasafe.dev;
+  server_name {partner}-bridge-dev.datasafe.dev;
 	location / {
       proxy_pass  http://localhost:7432;
       proxy_set_header    Host                $http_host;
@@ -35,16 +33,16 @@ To deploy the bridge you need to create a "personal access token" On github with
 
 For some reason I didn't manage to create an "per-repo" access token
 
-Clone `bridge-chartneo-hds`   
+Clone `bridge-hds`   
 
 - Run:
   - `npm install`
   - `npm run setup`
-- Edit `locaConfig.yml` and change `baseURL` to `https://chartneo-bridge-dev.datsafe.dev`
-- run `screen -S chartneo` 
+- Edit `locaConfig.yml` and change `baseURL` to `https://{partner}-bridge-dev.datsafe.dev`
+- run `screen -S bridge` 
   1. from screen run `npm run start:prod`
   2. from another terminal test install with `curl http://127.0.0.1:7432/` 
      => should get "Found. Redirecting to ..."
-  3. From a webpage open https://chartneo-bridge-dev.datsafe.dev
+  3. From a webpage open https://{partner}-bridge-dev.datsafe.dev
   4. You can now "detach" screen with Ctr+A  and Ctr+D, 
-     Come back to the screen with `screen -r chartneo` 
+     Come back to the screen with `screen -r bridge` 

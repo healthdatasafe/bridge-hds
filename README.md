@@ -1,8 +1,13 @@
-# ChartNeo To HDS Bridge
+# Partner To HDS Bridge
+
+Machine to machine base service.
+Handles registration and authorization for a service to communication with HDS backend.
 
 ## Description
 
-**Main task:** Handles the onboarding<=> between Chartneo backend and HDS 
+**Main task:** Handles the onboarding<=> between Partner backend and HDS 
+
+todo
 
 ## Bridge API
 
@@ -113,7 +118,8 @@ Read [./INSTALL.md](./INSTALL.md)
 - [X] define return parameters 
 - [X] create base stream structure for user
 - [ ] Finalize base stream structure for user
-- [ ] Add security to check request are comming from ChartNeo
+- [ ] Remotely load & override config from partner Account
+- [ ] Add security to check request are comming from Partner
 
 
 

@@ -1,7 +1,7 @@
 {
-  "name": "bridge-chartneo-hds",
+  "name": "bridge-hds",
   "version": "0.0.1",
-  "description": "Bridge between Chartneo Backend and HDS",
+  "description": "Bridge between a parrner Backend and HDS",
   "scripts": {
     "start": "NODE_ENV=test LOGS=info node src/start.js",
     "start:prod": "NODE_ENV=production node src/start.js",
