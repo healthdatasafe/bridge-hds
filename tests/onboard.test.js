@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, configGet, createUserAndPermissions } = require('./helpers/testServer');
+const { init: initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth } = require('./helpers/testServer');
 const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 const ShortUniqueId = require('short-unique-id');
 const pryv = require('pryv');
@@ -33,7 +33,7 @@ describe('[ONBX] Onboarding User', () => {
         test: 'Hello test'
       }
     };
-    const resultOnboard = (await apiTest().post('/user/onboard').send(requestBody)).body;
+    const resultOnboard = (await apiTest().post('/user/onboard').set(partnerAuth()).send(requestBody)).body;
     assert.equal(resultOnboard.type, 'authRequest');
     assert.ok(resultOnboard.onboardingSecret.length === 24);
     const onboardingSecret = resultOnboard.onboardingSecret;
@@ -82,7 +82,7 @@ describe('[ONBX] Onboarding User', () => {
     assert.equal(captured.url, `/?partnerUserId=${partnerUserId}&onboardingSecret=${onboardingSecret}&test=Hello+test&type=SUCCESS`);
 
     // -- Finaly 2 - Check that user is active
-    const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`);
+    const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`).set(partnerAuth());
     assert.equal(userStatusResponse.body.user.active, true);
     assert.equal(userStatusResponse.body.user.apiEndpoint, newUser.appApiEndpoint);
   });

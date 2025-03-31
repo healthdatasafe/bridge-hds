@@ -2,16 +2,21 @@ process.env.NODE_ENV = 'test';
 const { getConfig } = require('../../src/initBoiler')(`bridge:${process.pid}`);
 
 const request = require('supertest');
+const ShortUniqueId = require('short-unique-id');
+
 const { getApp } = require('../../src/server');
 const pryvService = require('../../src/lib/pryvService');
 const pryv = require('pryv');
+const user = require('../../src/methods/user.js');
 
 module.exports = {
   init,
   apiTest,
   configGet,
   pryvService,
-  createUserAndPermissions
+  createUserAndPermissions,
+  createOnboardedUser,
+  partnerAuth
 };
 
 let app = null;
@@ -35,6 +40,13 @@ async function init () {
 function apiTest (options) {
   if (app === null) throw new Error('Call testServer.init() first');
   return request(app, options);
+}
+
+/**
+ * Return partner auth Header
+ */
+function partnerAuth (key) {
+  return { authorization: config.get('partnerAuthToken') };
 }
 
 /**
@@ -78,5 +90,19 @@ async function createUserAndPermissions (username, permissions, appId = 'bridge-
     appApiEndpoint
   };
 
+  return result;
+}
+
+/**
+ * Create an onBoardeduser
+ */
+async function createOnboardedUser () {
+  const partnerUserId = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 18 })).rnd();
+  const username = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
+  const permissions = configGet('service:userPermissionRequest');
+  const appId = configGet('service:appId');
+  const result = await createUserAndPermissions(username, permissions, appId);
+  await user.addCredentialToBridgeAccount(partnerUserId, result.appApiEndpoint);
+  result.partnerUserId = partnerUserId;
   return result;
 }

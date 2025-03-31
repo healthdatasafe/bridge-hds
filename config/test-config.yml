@@ -1,6 +1,8 @@
 server:
   host: '127.0.0.1'  # Only allow connection from localhost
 
+partnerAuthToken: UNSAFE_TEST_TOKEN # The token used to authenticate the partner backend
+
 partnerURLs:
   webhookOnboard: 
     url: http://127.0.0.1:8365/ # Call partner backend on sucess or failure of auth process

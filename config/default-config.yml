@@ -3,6 +3,8 @@ baseURL: http://localhost:7432 # Exposed url no trailing '/'
 
 bridgeApiEndPoint: OVERRIDE_ME
 
+partnerAuthToken: OVERRIDE_ME # The token used to authenticate the partner backend
+
 partnerURLs:
   webhookOnboard: 
     url: https://TO_BE_SET # Call partner backend on sucess or failure of auth process

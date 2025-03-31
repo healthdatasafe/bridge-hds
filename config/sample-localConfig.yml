@@ -12,6 +12,7 @@ baseURL: https://your.site
 # The apiEndpoint to control your bridge account
 bridgeApiEndPoint: OVERRIDE_ME
 
+partnerAuthToken: OVERRIDE_ME # The token used to authenticate the partner backend
 
 partnerURLs:
   webhookOnboard: 

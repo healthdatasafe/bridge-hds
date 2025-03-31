@@ -6,11 +6,14 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 
+const checkAuth = require('./middlewares/checkAuth');
+
 // list (in order) async methods to be called.
 const initAsyncComponents = [
   require('./lib/pryvService').init,
   require('./lib/bridgeAccount').init,
-  require('./methods/onboard').init
+  require('./methods/onboard').init,
+  checkAuth.init
 ];
 
 const userRouter = require('./routes/userRoute');
@@ -41,6 +44,7 @@ async function getApp () {
 
   // keep first
   app.use(loggerMiddleware);
+  app.use(checkAuth.checkIfPartner);
 
   // static ressource are temporary until handled by externall apps.
   app.use('/static', express.static(path.resolve(__dirname, 'static')));

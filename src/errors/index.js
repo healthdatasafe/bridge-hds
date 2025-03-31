@@ -69,10 +69,10 @@ function internalError (msg, obj) {
  * @throws 401 Unathorized
  */
 function assertFromPartner (req) {
-  // if (req.headers[???] = ???? ) return;
-  // const e = new Error('Unathorized');
-  // e.statusCode = 401;
-  // throw e;
+  if (req.isPartner) return;
+  const e = new Error('Unathorized');
+  e.statusCode = 401;
+  throw e;
 }
 
 /**
