@@ -1,6 +1,7 @@
 const { getLogger, getConfig } = require('boiler');
 const logger = getLogger('server');
 
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
@@ -43,8 +44,21 @@ async function getApp () {
 
   // static ressource are temporary until handled by externall apps.
   app.use('/static', express.static(path.resolve(__dirname, 'static')));
-
   app.use('/user', userRouter);
+
+  // load plugins
+  const pluginDir = path.resolve(__dirname, '../plugins');
+  const plugins = fs.readdirSync(pluginDir, { withFileTypes: true })
+    .filter((dirent) => {
+      if (process.env.NODE_ENV !== 'test' && dirent.name === 'sample-plugin') return false;
+      return dirent.isDirectory();
+    })
+    .map((dirent) => path.resolve(pluginDir, dirent.name));
+  for (const plugin of plugins) {
+    const pluginPath = path.resolve(__dirname, 'plugins', plugin);
+    const pluginModule = require(pluginPath);
+    await pluginModule.init(app);
+  }
 
   // ------------ must be last ------- //
   app.use(expressErrorHandler);
