@@ -1,10 +1,12 @@
 const { bridgeConnection, streamIdForUserId, getUserParentStreamId } = require('../lib/bridgeAccount');
 const { unkownRessource, internalError } = require('../errors');
+const pryv = require('pryv');
 
 module.exports = {
   status,
   exists,
-  addCredentialToBridgeAccount
+  addCredentialToBridgeAccount,
+  getPryvConnectionAndStatus
 };
 
 /**
@@ -40,8 +42,15 @@ async function exists (partnerUserId) {
 
 /**
  * @typedef {UserStatus}
- * @property {boolean} active
- * @property {number} [lastSync] - EPOCH time in seconds
+ * @property {Object} user
+ * @property {boolean} user.active
+ * @property {string} user.partnerUserId
+ * @property {string} user.apiEndpoint
+ * @property {number} user.created - EPOCH time in seconds
+ * @property {number} user.modified - EPOCH time in seconds
+ * @property {Object} [syncStatus]
+ * @property {Object} syncStatus.content
+ * @property {number} syncStatus.lastSync - EPOCH time in seconds
  */
 
 /**
@@ -76,4 +85,24 @@ async function status (partnerUserId) {
     }
   };
   return result;
+}
+
+/**
+ * @typedef {Object} StatusAndPryvConnection
+ * @augments UserStatus
+ * @property {connection} connection
+ */
+
+/**
+ * Pryv API endpoint and status for the user
+ * @param {string} partnerUserId
+ * @returns {StatusAndPryvConnection}
+ */
+async function getPryvConnectionAndStatus (partnerUserId) {
+  const statusResult = await status(partnerUserId);
+  const connection = new pryv.Connection(statusResult.user.apiEndpoint);
+  return {
+    ...statusResult,
+    connection
+  };
 }

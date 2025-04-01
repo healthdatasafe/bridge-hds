@@ -32,7 +32,7 @@ let app = null;
  */
 async function getApp () {
   if (app != null) return app;
-  // initalize singletons
+  // initalize singletons & configs
   for (const init of initAsyncComponents) {
     await init();
   }
