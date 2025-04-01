@@ -9,7 +9,7 @@ function initBoiler (appName) {
   if (process.env.NODE_ENV === 'test') {
     extraConfigs.push({
       scope: 'test-config',
-      file: require('path').resolve(__dirname, '../localConfig.yml')
+      file: require('path').resolve(__dirname, '../config/test-config.yml')
     });
   }
   extraConfigs.push({

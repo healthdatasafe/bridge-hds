@@ -7,11 +7,11 @@ partnerAuthToken: OVERRIDE_ME # The token used to authenticate the partner backe
 
 partnerURLs:
   webhookOnboard: 
-    url: https://TO_BE_SET # Call partner backend on sucess or failure of auth process
+    url: https://WEBHOOK_TO_BE_SET # Call partner backend on sucess or failure of auth process
     method: 'GET'
     headers: 
       secret: 'YOUR_SECRET'
-  defaultRedirectOnError: https://TO_BE_SET # A default redirect url in case of error need to be set
+  defaultRedirectOnError: https://ON_ERROR_TO_BE_SET # A default redirect url in case of error need to be set
 
 service: 
   serviceInfoURL: https://demo.datasafe.dev/reg/service/info

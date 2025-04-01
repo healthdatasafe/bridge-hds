@@ -107,7 +107,6 @@ async function finalize (partnerUserId, pollParam) {
       logger.error(e);
     }
     // todo - log error to bridgeAccount (use e.webhookParams if exists)
-    // $$(e);
   }
   return settings.partnerURLs.defaultRedirectOnError;
 }
