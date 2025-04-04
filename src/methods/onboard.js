@@ -1,7 +1,7 @@
 const { getConfig, getLogger } = require('boiler');
 const { bridgeConnection, streamIdForUserId, getUserParentStreamId } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
-const { internalError, badRequest } = require('../errors');
+const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');
 
 const ShortUniqueId = require('short-unique-id');
@@ -189,7 +189,7 @@ async function authStatusStore (partnerUserId, payload) {
     }
   }];
   const response = await bridgeConnection().api(apiCalls);
-  if (!response[1].event || response[1].error) internalError('Failed storing auth status', response[1]);
+  if (!response[1].event || response[1].error) serviceError('Failed storing auth status', response[1]);
   return response[1].event;
 }
 

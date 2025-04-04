@@ -57,4 +57,18 @@ router.get('/:partnerUserId/status', async (req, res) => {
   res.json(result);
 });
 
+/**
+ * Change the status of a user
+ * - active: true/false
+ */
+router.post('/:partnerUserId/status', async (req, res) => {
+  errors.assertFromPartner(req);
+  const partnerUserId = req.params.partnerUserId;
+  errors.assertValidPartnerUserId(partnerUserId);
+  const active = req.body.active;
+  if (active !== true && active !== false) errors.badRequest('active must be true or false');
+  const result = await user.setStatus(partnerUserId);
+  res.json(result);
+});
+
 module.exports = router;

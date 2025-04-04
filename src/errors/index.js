@@ -11,7 +11,8 @@ module.exports = {
   unkownRessource,
   unauthorized,
   badRequest,
-  internalError
+  internalError,
+  serviceError
 };
 
 /**
@@ -55,6 +56,13 @@ function badRequest (msg, obj) {
 
 function internalError (msg, obj) {
   const e = new Error('Internal Error: ' + msg);
+  e.statusCode = 501;
+  if (obj) e.errorObject = obj;
+  throw e;
+}
+
+function serviceError (msg, obj) {
+  const e = new Error('Service Error: ' + msg);
   e.statusCode = 501;
   if (obj) e.errorObject = obj;
   throw e;

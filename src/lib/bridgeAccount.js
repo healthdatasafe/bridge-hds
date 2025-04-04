@@ -3,7 +3,7 @@
  */
 const { getConfig } = require('boiler');
 const { Connection } = require('pryv');
-const { internalError } = require('../errors');
+const { internalError, serviceError } = require('../errors');
 
 /** @type {Connection} - the connection to pryv bridge account */
 let _bridgeConnection;
@@ -21,7 +21,8 @@ module.exports = {
   init,
   bridgeConnection,
   streamIdForUserId,
-  getUserParentStreamId
+  getUserParentStreamId,
+  getActiveUserStreamId
 };
 
 /**
@@ -57,6 +58,13 @@ async function init () {
 /**
  * Util to get the streamId of a partnerUserId
  */
+function getActiveUserStreamId () {
+  return settings.activeUsersStreamId;
+}
+
+/**
+ * Util to get the streamId of a partnerUserId
+ */
 function getUserParentStreamId () {
   return settings.userParentStreamId;
 }
@@ -86,6 +94,6 @@ async function ensureBaseStreams () {
   const res = await _bridgeConnection.api(apiCalls);
   const unexpectedErrors = res.filter(r => r.error && r.error.id !== 'item-already-exists');
   if (unexpectedErrors.length > 0) {
-    internalError('Failed creating base streams', unexpectedErrors);
+    serviceError('Failed creating base streams', unexpectedErrors);
   }
 }
