@@ -16,6 +16,7 @@ const initAsyncComponents = [
   checkAuth.init
 ];
 
+const accountRouter = require('./routes/accountRoute');
 const userRouter = require('./routes/userRoute');
 const { expressErrorHandler } = require('./errors');
 const loggerMiddleware = require('./middlewares/logger');
@@ -48,6 +49,7 @@ async function getApp () {
 
   // static ressource are temporary until handled by externall apps.
   app.use('/static', express.static(path.resolve(__dirname, 'static')));
+  app.use('/account', accountRouter);
   app.use('/user', userRouter);
 
   // load plugins

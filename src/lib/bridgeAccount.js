@@ -4,6 +4,8 @@
 const { getConfig } = require('boiler');
 const { Connection } = require('pryv');
 const { internalError, serviceError } = require('../errors');
+const { getLogger } = require('boiler');
+const logger = getLogger('bridgeAccount');
 
 /** @type {Connection} - the connection to pryv bridge account */
 let _bridgeConnection;
@@ -14,7 +16,8 @@ const PARENT_USER_STREAM_SUFFIX = '-users';
 const settings = {
   mainStreamId: null,
   userParentStreamId: null,
-  activeUsersStreamId: null
+  activeUsersStreamId: null,
+  errorStreamId: null
 };
 
 module.exports = {
@@ -22,7 +25,9 @@ module.exports = {
   bridgeConnection,
   streamIdForUserId,
   getUserParentStreamId,
-  getActiveUserStreamId
+  getActiveUserStreamId,
+  logErrorOnBridgeAccount,
+  getErrorsOnBridgeAccount
 };
 
 /**
@@ -96,4 +101,55 @@ async function ensureBaseStreams () {
   if (unexpectedErrors.length > 0) {
     serviceError('Failed creating base streams', unexpectedErrors);
   }
+}
+
+/**
+ * Log error to the bridge account
+ * @param {string} message
+ * @param {Object} errorObject
+ * @returns {Promise<Event|ResponseContent>}
+ */
+async function logErrorOnBridgeAccount (message, errorObject = {}) {
+  const apiCalls = [{
+    method: 'events.create',
+    params: {
+      type: 'error/message-object',
+      streamIds: [settings.errorStreamId],
+      content: {
+        message,
+        errorObject
+      }
+    }
+  }];
+  try {
+    const res = await _bridgeConnection.api(apiCalls);
+    if (res[0].error || res[0].event) {
+      logger.error('Failed logging error on bridge account', res);
+      return res;
+    }
+    return res[0]?.event;
+  } catch (e) {
+    logger.error('Failed logging error on bridge account', e);
+    return e;
+  }
+}
+
+/**
+ * Retreive errors on the bridge account
+ * @param {Object} parameters @see https://pryv.github.io/reference/#get-events
+ * @returns {Promise<Array<Event>|ResponseContent>}
+ */
+async function getErrorsOnBridgeAccount (parameters = {}) {
+  const params = Object.assign({
+    streams: [settings.errorStreamId],
+    types: ['error/message-object']
+  }, parameters);
+  const res = await _bridgeConnection.api([{
+    method: 'events.get',
+    params
+  }]);
+  if (res.error || !res[0]?.events) {
+    return res;
+  }
+  return res[0].events;
 }

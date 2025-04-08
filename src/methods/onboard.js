@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const { bridgeConnection, streamIdForUserId, getUserParentStreamId } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForUserId, getUserParentStreamId, logErrorOnBridgeAccount } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
 const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');
@@ -48,19 +48,15 @@ async function init () {
  */
 async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   // check if user is active
-  try {
-    const userStatus = await user.getPryvConnectionAndStatus(partnerUserId);
-    // user found
+
+  const userStatus = await user.status(partnerUserId, false);
+  if (userStatus !== null) {
     return {
       type: 'userExists',
       user: userStatus.user
     };
-  } catch (e) {
-    // OK for 'unknown-referenced-resource' user does not exist yet
-    if (e.id !== 'unknown-referenced-resource') {
-      throw e;
-    }
   }
+  // user found
 
   // create Auth Request
   const authRequestBody = {
@@ -117,7 +113,13 @@ async function finalize (partnerUserId, pollParam) {
       await webhookCall(settings.partnerURLs.webhookOnboard, { type: 'ERROR', partnerUserId, error: e.message, errorObject: e.errorObject });
       logger.error(e);
     }
-    // todo - log error to bridgeAccount (use e.webhookParams if exists)
+    const errorObject = {
+      partnerUserId,
+      pollParam,
+      innerErrorMessage: e.message,
+      innerErrorObject: e.errorObject || null
+    };
+    logErrorOnBridgeAccount('Failed finalizing onboarding', errorObject);
   }
   return settings.partnerURLs.defaultRedirectOnError;
 }
@@ -256,6 +258,12 @@ async function webhookCall (whSettings, params) {
   } catch (e) {
     logger.error('Failed contacting partner backend', e);
     const e2 = new Error('Failed contacting partner backend');
+    e2.errorObject = {
+      webhookCall: {
+        whSettings,
+        params
+      }
+    };
     e2.skipWebHookCall = true;
     e2.webhookParams = params;
     throw e2;

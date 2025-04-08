@@ -56,10 +56,12 @@ async function exists (partnerUserId) {
 
 /**
  * Get user status
- * @returns {UserStatus}
+ * @param {string} partnerUserId
+ * @param {boolean} [throwUnkown=true] - if truethrow an error, otherwise return null
+ * @returns {UserStatus|null}
  * @throws 400 Unkown User
  */
-async function status (partnerUserId) {
+async function status (partnerUserId, throwUnkown = true) {
   const streamUserId = streamIdForUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
@@ -69,7 +71,12 @@ async function status (partnerUserId) {
     params: { streams: [streamUserId], limit: 1, types: ['sync-status/bridge'] }
   }];
   const resultFromBC = await bridgeConnection().api(apiCalls);
-  if (resultFromBC[0]?.error?.id === 'unknown-referenced-resource') unkownRessource('Unkown user', { userId: partnerUserId });
+  if (resultFromBC[0]?.error?.id === 'unknown-referenced-resource') {
+    if (throwUnkown) {
+      unkownRessource('Unkown user', { userId: partnerUserId });
+    }
+    return null;
+  }
   const error = resultFromBC.error || resultFromBC[1]?.error || resultFromBC[1]?.error;
   if (error) serviceError('Failed to get user status', error);
   const userEvent = resultFromBC[0].events[0];
