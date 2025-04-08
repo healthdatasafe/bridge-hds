@@ -107,6 +107,28 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
     assert.equal(resultOnboard.user.active, true);
     assert.equal(resultOnboard.user.apiEndpoint, userInfo.appApiEndpoint);
   });
+
+  it('[ONBR] POST /user/onboard/finalize redirect to error on unkown URL', async function () {
+    // -- Phase 1 - start onboarding
+    const partnerUserId = testRnd;
+    const requestBody = {
+      partnerUserId,
+      redirectURLs: {
+        success: 'https://success.domain',
+        cancel: 'https://cancel.domain'
+      },
+      clientData: {
+        test: 'Hello test'
+      }
+    };
+    await apiTest().post('/user/onboard').set(partnerAuth()).send(requestBody);
+
+    // -- Phase 4 - Trigger finalize URL with wrong poll
+    const returnURLResponse = await apiTest()
+      .get(`/user/onboard/finalize/${partnerUserId}?prYvpoll=https://bogus`);
+    assert.equal(returnURLResponse.status, 302);
+    assert.equal(returnURLResponse.headers.location, 'https://error.domain?message=Failed%20finalizing%20onboarding.');
+  });
 });
 
 describe('[ONBE] Onboarding User with failing Webhooks', () => {
@@ -119,7 +141,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
     this.timeout(2000);
   });
 
-  it('[ONBF] POST /user/onboard Failed WebHook', async function () {
+  it('[ONBW] POST /user/onboard Failed WebHook', async function () {
     this.timeout(3000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
@@ -162,7 +184,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
     const returnURLResponse = await apiTest()
       .get(`/user/onboard/finalize/${partnerUserId}?prYvpoll=${resultOnboardResponse.poll}`);
     assert.equal(returnURLResponse.status, 302);
-    assert.equal(returnURLResponse.headers.location, 'https://error.domain');
+    assert.equal(returnURLResponse.headers.location, 'https://error.domain?message=Failed%20finalizing%20onboarding.');
 
     // -- Finaly 1 - Check that an error has been logged property on bridge Accounts
     await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1 sec .. error is sent async

@@ -121,14 +121,14 @@ async function finalize (partnerUserId, pollParam) {
     };
     logErrorOnBridgeAccount('Failed finalizing onboarding', errorObject);
   }
-  return settings.partnerURLs.defaultRedirectOnError;
+  return getErrorRedirectURLWithMessage('Failed finalizing onboarding.');
 }
 
 /**
  * really finalized
  * @param {string} partnerUserId
  * @param {string} pollParam
- * @returns url
+ * @returns url - to redirect the user
  */
 async function finalizeToBeCatched (partnerUserId, pollParam) {
   // might be an Array ..
@@ -140,8 +140,9 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   const currentAuthStatuses = await authStatusesGet(partnerUserId);
   const matchingStatuses = currentAuthStatuses.filter(s => s.content.responseBody.poll === pollURL);
   if (matchingStatuses.length !== 1) {
-    // -- todo redirect to partner error page
-    badRequest('No matching pending request for this user');
+    logger.error('No matching pending request for this user', { partnerUserId, pollParam });
+    // -- redirect to partner error page
+    return getErrorRedirectURLWithMessage('No matching pending request');
   }
   const matchingStatusContent = matchingStatuses[0].content;
   const webhookParams = Object.assign({ partnerUserId, onboardingSecret: matchingStatusContent.onboardingSecret }, matchingStatusContent.webhookClientData);
@@ -268,4 +269,9 @@ async function webhookCall (whSettings, params) {
     e2.webhookParams = params;
     throw e2;
   }
+}
+
+function getErrorRedirectURLWithMessage (message) {
+  const encodedMessage = encodeURIComponent(message);
+  return settings.partnerURLs.defaultRedirectOnError + '?message=' + encodedMessage;
 }
