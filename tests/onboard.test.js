@@ -215,6 +215,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
         }
       }
     };
+    console.log(JSON.stringify(errorLog.body, null, 2));
     assert.deepEqual(errorEvent.content.errorObject, expectedErrorObject);
 
     // -- Finaly 2 - Check that user is active

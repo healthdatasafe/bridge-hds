@@ -2,7 +2,7 @@
 
 ## Machine should be prepared like for Open-Pryv.io
 
-## Add {èartner}-bridge-dev to nginx
+## Add {partner}-bridge-dev to nginx
 
 Add the folowing files "as root" to `/etc/nginx/sites-enabled`
 

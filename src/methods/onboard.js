@@ -174,7 +174,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
  */
 
 /**
- * Get pending auth status (my be sevrals)
+ * Get pending auth status (may be sevrals)
  * @param {string} partnerUserId
  * @returns {Array} of status
  */
