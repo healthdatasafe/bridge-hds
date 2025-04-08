@@ -226,6 +226,8 @@ Exemple:
 - [ ] Finalize base stream structure for user
 - [ ] Add data synchronization status
 - [ ] Deactivate and set the account as "unauthorized" when access is revoked.
+- [ ] Allow partner to revoke an access
+- [ ] Add a logic to ensure that the same account cannot be linked twice
 - [ ] Remotely load & override config from partner Account (option)
 - [X] Add security to check requests are coming from Partner
 

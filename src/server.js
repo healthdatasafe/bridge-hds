@@ -1,7 +1,6 @@
 const { getLogger, getConfig } = require('boiler');
 const logger = getLogger('server');
 
-const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
@@ -15,6 +14,8 @@ const initAsyncComponents = [
   require('./methods/onboard').init,
   checkAuth.init
 ];
+
+const plugins = require('./lib/plugins');
 
 const accountRouter = require('./routes/accountRoute');
 const userRouter = require('./routes/userRoute');
@@ -52,19 +53,8 @@ async function getApp () {
   app.use('/account', accountRouter);
   app.use('/user', userRouter);
 
-  // load plugins
-  const pluginDir = path.resolve(__dirname, '../plugins');
-  const plugins = fs.readdirSync(pluginDir, { withFileTypes: true })
-    .filter((dirent) => {
-      if (process.env.NODE_ENV !== 'test' && dirent.name === 'sample-plugin') return false;
-      return dirent.isDirectory();
-    })
-    .map((dirent) => path.resolve(pluginDir, dirent.name));
-  for (const plugin of plugins) {
-    const pluginPath = path.resolve(__dirname, 'plugins', plugin);
-    const pluginModule = require(pluginPath);
-    await pluginModule.init(app);
-  }
+  // init plugins
+  await plugins.initWithExpressApp(app);
 
   // ------------ must be last ------- //
   app.use(expressErrorHandler);

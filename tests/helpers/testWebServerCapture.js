@@ -66,7 +66,7 @@ async function startHttpServerCapture (params) {
       res.write(response.body);
       res.end();
     } catch (e) {
-      console.log(e);
+      logger.error(e);
     }
     logger.info('WebServerCapture sent ');
   }
