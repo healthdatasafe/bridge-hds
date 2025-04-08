@@ -230,6 +230,11 @@ POST method: parameters are sent as query parameters in JSON as body
   - `error`: {string} an error message
   - `errorObjectJSON`: {string} error details JSON stringified
 
+## Redirect URLs
+During the onboarding process the user can be redirected to 3 distinct. 
+- for **SUCCESS** and **CANCEL** cases they are defined in the `POST /user/onboard` API call 
+- for **ERROR** case this is defined with the setting `partnerURLs:defaultRedirectOnError` as the orginal request for inboarding might not be found. 
+
 ## Storage & Structure
 
 A "Partner" account is used for storage on HDS 
@@ -258,6 +263,7 @@ Exemple:
 - [ ] Add data synchronization status
 - [ ] Deactivate and set the account as "unauthorized" when access is revoked.
 - [ ] Allow partner to revoke an access
+- [ ] Evaluate an erroRedirect for onbording with the same schema than forwarding the secret.
 - [ ] Add a logic to ensure that the same account cannot be linked twice
 - [ ] Remotely load & override config from partner Account (option)
 - [X] Add security to check requests are coming from Partner
