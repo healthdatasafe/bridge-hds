@@ -8,7 +8,7 @@
     "setup": "scripts/setup.sh",
     "setup-dev-env": "scripts/setup-dev-env.sh",
     "test": "mocha tests plugins/*/tests --test-reporter=spec --config localConfig.yml",
-    "test:coverage": "c8 mocha tests",
+    "test:coverage": "c8 mocha tests plugins/*/tests --config localConfig.yml",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:change": "eslint $(git diff --name-only HEAD | grep -E '\\.(js|jsx)$' | xargs)"
