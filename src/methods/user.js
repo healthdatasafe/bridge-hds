@@ -1,5 +1,5 @@
 const { bridgeConnection, streamIdForUserId, getUserParentStreamId, getActiveUserStreamId } = require('../lib/bridgeAccount');
-const { unkownRessource, serviceError } = require('../errors');
+const { unkownRessource, serviceError, badRequest } = require('../errors');
 const pryv = require('pryv');
 
 module.exports = {
@@ -138,10 +138,16 @@ async function setStatus (partnerUserId, active) {
 /**
  * Pryv API endpoint and status for the user
  * @param {string} partnerUserId
+ * @param {boolean} [includesInactive=false] - if true, include inactive users
  * @returns {StatusAndPryvConnection}
+ * @throws 400 Unkown User
+ * @throws 400 Deactivated User - if includesInactive is false & user is deactivated
  */
-async function getPryvConnectionAndStatus (partnerUserId) {
+async function getPryvConnectionAndStatus (partnerUserId, includesInactive = false) {
   const statusResult = await status(partnerUserId);
+  if (!statusResult.user.active && !includesInactive) {
+    badRequest('Deactivated User', { userId: partnerUserId });
+  }
   const connection = new pryv.Connection(statusResult.user.apiEndpoint);
   return {
     ...statusResult,
