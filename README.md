@@ -29,7 +29,7 @@ Unless specified in the documentation, a secret has to be provided for each API 
   - `redirectURLs`: {Object} with 3 returnURL
     - `sucess`: {string} in case of success
     - `cancel`: {string} in case of cancel of operation by user
-  - `clientData`: {Object} - key value object to be sent back as a query parameter or body of the web hook
+  - `clientData`: {Object} - key value object to be sent back as a query parameter or body of the web hook. This will also be provided to the plugin for new user initialization. 
 
 **@returns**
 
@@ -38,7 +38,9 @@ Returns can be of two types `authrequest` or `userExists`
   - **type authRequest** 
     - `type`:  {string} 'authRequest' 
     - `onboardingSecret`: {string} Secret for machine to machine exchange will be sent alongside other parameters with web-hook calls (unique to this onboarding instance).
-    - `redirectUserURL`: {string} The URL to redirect the user to.
+    - `redirectUserURLs`: {object} - you may add your own query string parameters to the following URLs to match a returning user.
+      - `success`: {string} URL in case of success
+      - `cancel`: {string} URL in case of cancelation by the user
     - `context`: {Object} In a standard usage of the bridge, you should not need to have any use for it. If interested, you will find documentation on [auth-request documentation.](https://pryv.github.io/reference/#auth-request) 
 
  - **type userExists** 
@@ -198,6 +200,35 @@ Errors are returned in json with the following properties
 
   - `error`: {string} message
   - `errorObject`: {object} details on the error
+
+## Webhook 
+
+A webhook on the partner server side will be notified of succes, failure or errors of the onboarding process
+
+The settings for the webhook are defined under the `partnerURLs:webhookOnboard` in `localConfig.yml` with the settings are:
+
+- `url`: {string} "http:... "
+- `method`: {string} "GET" or "POST"
+- `headers`: {Object as key - value} they will be sent with each webook call, you may set a secret token there.
+
+**parameters** 
+GET method: parameters are sent as query parameters
+POST method: parameters are sent as query parameters in JSON as body
+
+**'SUCCESS' or 'CANCEL'**
+  - `type`: {string} "SUCCESS", "CANCEL"
+  - `partnerUserId`: {string} 
+  - `onboardingSecret`: {string} the secret for M2M security send during the onboarding initiate call.
+  - `...`: {string} the content of the `clientData` key value sent during `POST /user/onboard` 
+  - `pluginResultJSON`: {string} **Only in case of "SUCCESS"** the result provided by the plugin when a user is associated. It is sent a JSON to ensure a correct transmission with "GET" method
+   - `status`: {string} "REFUSED" **Only in case of "CANCEL"** (no uses for now, maybe timeout in the future)
+
+**'ERROR''**
+`onboardingSecret`, and `clientData` values are optionnaly provided if the error happend after retreiving the onboarding session. 
+  - `type`: {string} "ERROR"
+  - `partnerUserId`: {string} 
+  - `error`: {string} an error message
+  - `errorObjectJSON`: {string} error details JSON stringified
 
 ## Storage & Structure
 

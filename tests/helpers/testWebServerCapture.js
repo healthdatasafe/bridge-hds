@@ -2,7 +2,7 @@ const { getLogger } = require('boiler');
 const http = require('http');
 
 const logger = getLogger('testServer');
-const querystring = require('node:querystring'); 
+const querystring = require('node:querystring');
 
 module.exports = {
   startHttpServerCapture

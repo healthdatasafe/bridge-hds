@@ -24,7 +24,7 @@ router.post('/onboard/', async (req, res) => {
     errors.assertValidURL(redirectURLs[key], 'redirectURLs.' + key);
   }
   const webhookClientData = req.body.clientData || {};
-  for (const key of ['partnerUserId', 'status', 'error', 'errorObject', 'type']) {
+  for (const key of ['onboardingSecret', 'partnerUserId', 'status', 'error', 'errorObject', 'type', 'errorObjectJSON', 'pluginResultJSON', 'pluginResult']) {
     if (webhookClientData[key]) errors.badRequest(`clientData.${key} is not  is a reserved key`);
   }
 

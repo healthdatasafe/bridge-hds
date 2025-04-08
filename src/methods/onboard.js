@@ -110,8 +110,15 @@ async function finalize (partnerUserId, pollParam) {
     return await finalizeToBeCatched(partnerUserId, pollParam);
   } catch (e) {
     if (!e.skipWebHookCall) {
+      const webhookParams = Object.assign(
+        {
+          type: 'ERROR',
+          partnerUserId,
+          error: e.message,
+          errorObjectJSON: JSON.stringify(e.errorObject)
+        }, e.webhookParams || { });
       // call webhook
-      await webhookCall(settings.partnerURLs.webhookOnboard, { type: 'ERROR', partnerUserId, error: e.message, errorObject: e.errorObject });
+      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
       logger.error(e);
     }
     const errorObject = {
@@ -152,21 +159,27 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
 
   // ACCEPTED
-  if (pollContent.status === 'ACCEPTED') {
-    // -- Add user credentials to partner streams
-    await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
-    // -- Advertise plugins of this new user
-    const pluginsResult = await advertiseNewUserToPlugins(partnerUserId, pollContent.apiEndpoint);
-    webhookParams.pluginsResultJSON = JSON.stringify(pluginsResult);
-    webhookParams.type = 'SUCCESS';
-    // call webhook
-    await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
-    return matchingStatusContent.redirectURLs.success;
-  }
+  try {
+    if (pollContent.status === 'ACCEPTED') {
+      // -- Add user credentials to partner streams
+      await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
+      // -- Advertise plugins of this new user
+      const pluginsResult = await advertiseNewUserToPlugins(partnerUserId, pollContent.apiEndpoint);
+      webhookParams.pluginsResultJSON = JSON.stringify(pluginsResult);
+      webhookParams.type = 'SUCCESS';
+      // call webhook
+      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
+      return matchingStatusContent.redirectURLs.success;
+    }
 
-  // CANCELLED
-  webhookParams.type = 'CANCEL';
-  webhookParams.status = pollContent.status;
+    // CANCELLED
+    webhookParams.type = 'CANCEL';
+    webhookParams.status = pollContent.status;
+  } catch (e) {
+    // just attach webhookParams to forward the error
+    e.webhookParams = webhookParams;
+    throw e;
+  }
   await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
   return matchingStatusContent.redirectURLs.cancel;
 }

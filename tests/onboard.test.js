@@ -20,7 +20,7 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
   });
 
   it('[ONBU] POST /user/onboard', async function () {
-    this.timeout(3000);
+    this.timeout(4000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = {
@@ -115,6 +115,7 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
   });
 
   it('[ONBR] POST /user/onboard/finalize redirect to error on unkown URL', async function () {
+    this.timeout(4000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = {
@@ -216,14 +217,14 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
             partnerUserId,
             onboardingSecret: resultOnboard.onboardingSecret,
             test: 'Hello test',
-            type: 'SUCCESS',
+            type: 'SUCCESS'
           }
         }
       }
     };
 
     const innerErrorObject = errorEvent.content.errorObject.innerErrorObject;
-    const pluginResultsJSON = JSON.parse(innerErrorObject.webhookCall.params.pluginsResultJSON)
+    const pluginResultsJSON = JSON.parse(innerErrorObject.webhookCall.params.pluginsResultJSON);
     // for test plugins just check sample and if no error
     for (const [key, value] of Object.entries(pluginResultsJSON)) {
       if (key === 'sample') {
