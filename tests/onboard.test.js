@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 require('./helpers/testServer');
 const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth } = require('./helpers/testServer');
+const { init: initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser } = require('./helpers/testServer');
 const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 const ShortUniqueId = require('short-unique-id');
 const pryv = require('pryv');
@@ -85,5 +85,26 @@ describe('[ONBX] Onboarding User', () => {
     const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`).set(partnerAuth());
     assert.equal(userStatusResponse.body.user.active, true);
     assert.equal(userStatusResponse.body.user.apiEndpoint, newUser.appApiEndpoint);
+  });
+
+  it('[ONBA] POST /user/onboard already exists', async function () {
+    const userInfo = await createOnboardedUser();
+    // start onboarding
+    const partnerUserId = userInfo.partnerUserId;
+    const requestBody = {
+      partnerUserId,
+      redirectURLs: {
+        success: 'https://success.domain',
+        cancel: 'https://cancel.domain'
+      },
+      clientData: {
+        test: 'Hello test'
+      }
+    };
+    const resultOnboard = (await apiTest().post('/user/onboard').set(partnerAuth()).send(requestBody)).body;
+    assert.equal(resultOnboard.type, 'userExists');
+    assert.equal(resultOnboard.user.partnerUserId, partnerUserId);
+    assert.equal(resultOnboard.user.active, true);
+    assert.equal(resultOnboard.user.apiEndpoint, userInfo.appApiEndpoint);
   });
 });

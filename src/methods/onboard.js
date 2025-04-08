@@ -48,8 +48,19 @@ async function init () {
  */
 async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   // check if user is active
-
-  // -- todo
+  try {
+    const userStatus = await user.getPryvConnectionAndStatus(partnerUserId);
+    // user found
+    return {
+      type: 'userExists',
+      user: userStatus.user
+    };
+  } catch (e) {
+    // OK for 'unknown-referenced-resource' user does not exist yet
+    if (e.id !== 'unknown-referenced-resource') {
+      throw e;
+    }
+  }
 
   // create Auth Request
   const authRequestBody = {
