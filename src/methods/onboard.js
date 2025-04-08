@@ -5,6 +5,7 @@ const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');
 
 const ShortUniqueId = require('short-unique-id');
+const { advertiseNewUserToPlugins } = require('../lib/plugins.js');
 const onboardingSecretGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 24 });
 
 const logger = getLogger('onboard');
@@ -154,6 +155,9 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   if (pollContent.status === 'ACCEPTED') {
     // -- Add user credentials to partner streams
     await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
+    // -- Advertise plugins of this new user
+    const pluginsResult = await advertiseNewUserToPlugins(partnerUserId, pollContent.apiEndpoint);
+    webhookParams.pluginsResultJSON = JSON.stringify(pluginsResult);
     webhookParams.type = 'SUCCESS';
     // call webhook
     await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);

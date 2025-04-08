@@ -2,6 +2,7 @@ const { getLogger } = require('boiler');
 const http = require('http');
 
 const logger = getLogger('testServer');
+const querystring = require('node:querystring'); 
 
 module.exports = {
   startHttpServerCapture
@@ -43,6 +44,15 @@ async function startHttpServerCapture (params) {
         url: req.url,
         headers: req.headers
       };
+      const indexOfQuestionMark = req.url.indexOf('?');
+      if (indexOfQuestionMark > -1) {
+        result.path = req.url.substring(0, indexOfQuestionMark);
+        const queryPart = req.url.substring(indexOfQuestionMark + 1);
+        result.query = querystring.parse(queryPart);
+      } else {
+        result.path = req.url;
+        result.query = {};
+      }
       // capture content
       if (req.method === 'POST') {
         const body = [];

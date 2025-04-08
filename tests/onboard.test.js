@@ -20,7 +20,7 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
   });
 
   it('[ONBU] POST /user/onboard', async function () {
-    this.timeout(2000);
+    this.timeout(3000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = {
@@ -79,7 +79,13 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
     // -- Finaly 1 - Check that webhook has been called properly
     const captured = captureServer.captured.pop();
     assert.equal(captured.method, 'GET');
-    assert.equal(captured.url, `/?partnerUserId=${partnerUserId}&onboardingSecret=${onboardingSecret}&test=Hello+test&type=SUCCESS`);
+    assert.equal(captured.path, '/');
+    // keep plugins results to test idependently
+    const capturedQuery = structuredClone(captured.query);
+    const pluginsResults = JSON.parse(capturedQuery.pluginsResultJSON);
+    delete capturedQuery.pluginsResultJSON;
+    assert.deepEqual(capturedQuery, { partnerUserId, onboardingSecret, test: 'Hello test', type: 'SUCCESS' });
+    assert.deepEqual(pluginsResults.sample, { dummy: 'Acknowledged by sample plugin' });
 
     // -- Finaly 2 - Check that user is active
     const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`).set(partnerAuth());
@@ -142,7 +148,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
   });
 
   it('[ONBW] POST /user/onboard Failed WebHook', async function () {
-    this.timeout(3000);
+    this.timeout(4000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = {
@@ -210,11 +216,23 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
             partnerUserId,
             onboardingSecret: resultOnboard.onboardingSecret,
             test: 'Hello test',
-            type: 'SUCCESS'
+            type: 'SUCCESS',
           }
         }
       }
     };
+
+    const innerErrorObject = errorEvent.content.errorObject.innerErrorObject;
+    const pluginResultsJSON = JSON.parse(innerErrorObject.webhookCall.params.pluginsResultJSON)
+    // for test plugins just check sample and if no error
+    for (const [key, value] of Object.entries(pluginResultsJSON)) {
+      if (key === 'sample') {
+        assert.deepEqual(value, { dummy: 'Acknowledged by sample plugin' });
+      } else {
+        assert.ok(value.error == null);
+      }
+    }
+    expectedErrorObject.innerErrorObject.webhookCall.params.pluginsResultJSON = innerErrorObject.webhookCall.params.pluginsResultJSON;
 
     assert.deepEqual(errorEvent.content.errorObject, expectedErrorObject);
 

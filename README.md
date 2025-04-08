@@ -11,7 +11,7 @@ This service acts as a proxy between a partner service and HDS and handles
 
 ### Data synchronization and transformation and plugin development
 
-Data synchronization and transformation is specific for each partner. Each "bridge" should rely on at least one **plugin** handle data. 
+Data synchronization and transformation is specific for each partner. Each "bridge" should rely on at least one **plugin** handle data. The service is not designed to handle multiple plugins, but it is kept this way in order to perform ordinary tests alongisde plugin's. 
 
 A sample plugin is available as a starting point in `sample-plugin` folder.
 

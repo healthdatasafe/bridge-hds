@@ -10,7 +10,8 @@ const initAsyncComponents = [
 
 module.exports = {
   init,
-  newUserAssociated
+  newUserAssociated,
+  key: 'sample' // key used to identify plugin
 };
 
 /**
