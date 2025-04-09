@@ -1,7 +1,3 @@
-const { getLogger } = require('boiler');
-const logger = getLogger('plugin-test');
-
-const dataRoute = require('./routes/dataRoute');
 const PluginBridge = require('../../../src/lib/PluginBridge');
 
 // list (in order) async methods to be called.
@@ -23,11 +19,14 @@ class PluginSample extends PluginBridge {
    * @param {Express.Application} app
    */
   async init (app) {
+    await super.init(); // keep await super.init();
     if (process.env.NODE_ENV !== 'test') throw new Error('This plugin is only for test purposes');
     // initalize singletons & config
-    for (const init of initAsyncComponents) await init();
+    for (const init of initAsyncComponents) await init(this);
+    // initialize data route with plugin as reference to expose toolkit.
+    const dataRoute = require('./routes/dataRoute')(this);
     app.use('/data/', dataRoute);
-    logger.info('Test plugin loaded');
+    this.logger.info('Test plugin loaded');
   }
 
   /**
