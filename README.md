@@ -15,6 +15,28 @@ Data synchronization and transformation is specific for each partner. Each "brid
 
 A sample plugin is available as a starting point in `sample-plugin` folder.
 
+### Flow
+
+This is a summary of the flow in case of sucessfull onboarding
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant P as Partner
+  participant B as HDS Bridge
+
+  P->>+B: POST /user/onboard<BR>(partnerUserId, redirectURLs)
+  B-->>-P: (redirectUserURL, onboardingSecret)
+  P->>U: Open redirectUserURL
+  activate U
+  Note over U: Register or Login on HDS <br/> Grant Authorization
+  U->>+B: Finalize onboarding
+  B->>P: Call Webook<BR>(partnerUserId, onboardingSecret, status, ...) 
+  B-->>-U: Redirect to redirectURLs.success provided at "onboard"
+  deactivate U 
+
+```
+
 ## Bridge API
 
 ### `Authorization`
