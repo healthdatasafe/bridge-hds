@@ -54,7 +54,8 @@ function loadPluginsModules () {
   const result = [];
   for (const pluginFolderName of pluginFolderNames) {
     const pluginPath = path.resolve(__dirname, 'plugins', pluginFolderName);
-    result.push(require(pluginPath));
+    const PluginClass = require(pluginPath);
+    result.push(new PluginClass());
   }
   return result;
 }

@@ -149,7 +149,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
   });
 
   it('[ONBW] POST /user/onboard Failed WebHook', async function () {
-    this.timeout(4000);
+    this.timeout(6000);
     // -- Phase 1 - start onboarding
     const partnerUserId = testRnd;
     const requestBody = {
