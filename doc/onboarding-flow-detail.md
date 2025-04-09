@@ -35,7 +35,7 @@ sequenceDiagram
   B->>+HA: fetch auth
   HA-->>-B: authorization
   B->>HB: add user (auhorization)
-  B->>P: Call Webook<BR>(partnerUserId, onboardingSecret, status, ...) 
+  B->>P: Call WebHook<BR>(partnerUserId, onboardingSecret, status, ...) 
   B-->>-U: Redirect to redirectURLs.success provided at "onboard"
   deactivate U 
 ```

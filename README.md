@@ -33,7 +33,7 @@ sequenceDiagram
   activate U
   Note over U: Register or Login on HDS <br/> Grant Authorization
   U->>+B: Finalize onboarding
-  B->>P: Call Webook<BR>(partnerUserId, onboardingSecret, status, ...) 
+  B->>P: Call WebHook<BR>(partnerUserId, onboardingSecret, status, ...) 
   B-->>-U: Redirect to redirectURLs.success provided at "onboard"
   deactivate U 
 
@@ -241,7 +241,7 @@ The settings for the webhook are defined under the `partnerURLs:webhookOnboard` 
 
 - `url`: {string} "http:... "
 - `method`: {string} "GET" or "POST"
-- `headers`: {Object as key - value} they will be sent with each webook call, you may set a secret token there.
+- `headers`: {Object as key - value} they will be sent with each WebHook call, you may set a secret token there.
 
 **parameters** 
 GET method: parameters are sent as query parameters
