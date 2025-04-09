@@ -38,9 +38,7 @@ Returns can be of two types `authrequest` or `userExists`
   - **type authRequest** 
     - `type`:  {string} 'authRequest' 
     - `onboardingSecret`: {string} Secret for machine to machine exchange will be sent alongside other parameters with web-hook calls (unique to this onboarding instance).
-    - `redirectUserURLs`: {object} - you may add your own query string parameters to the following URLs to match a returning user.
-      - `success`: {string} URL in case of success
-      - `cancel`: {string} URL in case of cancelation by the user
+    - `redirectUserURL`: {object} - redirect the user to this URL (may be a popup)
     - `context`: {Object} In a standard usage of the bridge, you should not need to have any use for it. If interested, you will find documentation on [auth-request documentation.](https://pryv.github.io/reference/#auth-request) 
 
  - **type userExists** 
@@ -85,7 +83,17 @@ Response **userExists**:
 }
 ```
 
-Response **userExists**: 
+Response **authRequest**: 
+
+```json
+{
+  "type": "authRequest",
+  "onboardingSecret": "GalWQDvCb7xoJJLRZkxohCfQ",
+  "redirectUserURL": "https://demo.datasafe.dev/www/access/access.html?lang=en&key=Au6gSTJ4tRQ1FEnK&requestingAppId=chartneo-bridge&returnURL=http%3A%2F%2Flocalhost%3A7432%2Fuser%2Fonboard%2Ffinalize%2Fu48dq83a&domain=open-pryv.io&registerURL=https%3A%2F%2Fdemo.datasafe.dev%2Freg%2F&poll=https%3A%2F%2Fdemo.datasafe.dev%2Freg%2Faccess%2FAu6gSTJ4tRQ1FEnK",
+  "context": { }
+}
+
+```
 
 ### `GET /user/{partnerUserId}/status`
 
