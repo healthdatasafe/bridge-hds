@@ -274,8 +274,8 @@ Pryv default event types are listed here: https://pryv.github.io/event-types/
 
 Here is the list of custom event-types used by the bridge
 
-- **sync-status** to record each synchronization status (use on user's streams)
-  - TODO
+- **sync-status/bridge** to record each synchronization status (use on user's streams)
+  - content: {object} -- freeform depends on each plugin flavor
 
 - **temp-status/bridge-auth-request** to record each synchronization status (use on user's streams)
   - content: 

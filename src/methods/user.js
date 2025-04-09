@@ -91,7 +91,7 @@ async function status (partnerUserId, throwUnkown = true) {
     },
     syncStatus: {
       content: syncEvent?.content,
-      lastSync: syncEvent?.created
+      lastSync: syncEvent?.time
     }
   };
   return result;

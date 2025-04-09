@@ -1,5 +1,6 @@
 const { getConfig } = require('boiler');
 const user = require('../../../../src/methods/user');
+const { logSyncStatus } = require('../../../../src/lib/bridgeAccount');
 
 const streamIds = {
   mainUserStreamId: null // this is the stream id on userAccount used to store the data
@@ -47,5 +48,10 @@ async function newData (partnerUserId, data) {
     });
   }
   const result = await hdsUser.connection.api(apiCalls);
+  // keep event modified time as syncTime (maybe different for your plugin)
+  const syncTime = result[0].event.modified;
+  const createdEventId = result[0].event.id;
+  // log sync status on next tick
+  process.nextTick(() => { logSyncStatus(partnerUserId, syncTime, { createdEventId }); });
   return result;
 }

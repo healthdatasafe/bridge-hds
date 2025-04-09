@@ -27,7 +27,8 @@ module.exports = {
   getUserParentStreamId,
   getActiveUserStreamId,
   logErrorOnBridgeAccount,
-  getErrorsOnBridgeAccount
+  getErrorsOnBridgeAccount,
+  logSyncStatus
 };
 
 /**
@@ -110,28 +111,32 @@ async function ensureBaseStreams () {
  * @returns {Promise<Event|ResponseContent>}
  */
 async function logErrorOnBridgeAccount (message, errorObject = {}) {
-  const apiCalls = [{
-    method: 'events.create',
-    params: {
-      type: 'error/message-object',
-      streamIds: [settings.errorStreamId],
-      content: {
-        message,
-        errorObject
-      }
+  const params = {
+    type: 'error/message-object',
+    streamIds: [settings.errorStreamId],
+    content: {
+      message,
+      errorObject
     }
-  }];
-  try {
-    const res = await _bridgeConnection.api(apiCalls);
-    if (res[0].error || res[0].event) {
-      logger.error('Failed logging error on bridge account', res);
-      return res;
-    }
-    return res[0]?.event;
-  } catch (e) {
-    logger.error('Failed logging error on bridge account', e);
-    return e;
-  }
+  };
+  return await createSingleEvent(params, 'logging error');
+}
+
+/**
+ * Log a successfull synchronization
+ * @param partnerUserId {string}
+ * @param [time] {number} - EPOCH the time of the synchonization (if null now)
+ * @param [content] {Object} - a meaningfull object for the plugin sync status
+ */
+async function logSyncStatus (partnerUserId, time = null, content = null) {
+  const userStreamId = streamIdForUserId(partnerUserId);
+  const params = {
+    type: 'sync-status/bridge',
+    streamIds: [userStreamId],
+    content
+  };
+  if (time != null) params.time = time;
+  return await createSingleEvent(params, 'creating log status');
 }
 
 /**
@@ -152,4 +157,25 @@ async function getErrorsOnBridgeAccount (parameters = {}) {
     return res;
   }
   return res[0].events;
+}
+
+/**
+ * Helper - create a single event, returns it's content of an error
+ */
+async function createSingleEvent (params, messageOnError = 'creating event') {
+  const apiCalls = [{
+    method: 'events.create',
+    params
+  }];
+  try {
+    const res = await _bridgeConnection.api(apiCalls);
+    if (res[0].error || !res[0].event) {
+      logger.error(`Failed ${messageOnError} on bridge account result:`, res);
+      return res;
+    }
+    return res[0]?.event;
+  } catch (e) {
+    logger.error(`Failed  ${messageOnError} on bridge account error:`, e);
+    return e;
+  }
 }
