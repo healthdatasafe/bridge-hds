@@ -15,9 +15,11 @@ Data synchronization and transformation is specific for each partner. Each "brid
 
 A sample plugin is available as a starting point in `sample-plugin` folder.
 
-### Flow
+### Onboarding Flow
 
 This is a summary of the flow in case of sucessfull onboarding
+
+A detailed flow can be found in [./doc/onboarding-flow-detail.md](./doc/onboarding-flow-detail.md)
 
 ```mermaid
 sequenceDiagram
