@@ -81,6 +81,12 @@ async function status (partnerUserId, throwUnkown = true) {
   if (error) serviceError('Failed to get user status', error);
   const userEvent = resultFromBC[0].events[0];
   const syncEvent = resultFromBC[1].events[0];
+  if (userEvent == null) {
+    if (throwUnkown) {
+      unkownRessource('Unkown user', { userId: partnerUserId });
+    }
+    return null;
+  }
   const result = {
     user: {
       active: userEvent.streamIds.includes(getActiveUserStreamId()),
