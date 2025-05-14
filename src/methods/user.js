@@ -59,7 +59,7 @@ async function exists (partnerUserId) {
  * @param {string} partnerUserId
  * @param {boolean} [throwUnkown=true] - if truethrow an error, otherwise return null
  * @returns {UserStatus|null}
- * @throws 400 Unkown User
+ * @throws 404 Unkown User
  */
 async function status (partnerUserId, throwUnkown = true) {
   const streamUserId = streamIdForUserId(partnerUserId);
@@ -153,7 +153,7 @@ async function setStatus (partnerUserId, active) {
  * @param {string} partnerUserId
  * @param {boolean} [includesInactive=false] - if true, include inactive users
  * @returns {StatusAndPryvConnection}
- * @throws 400 Unkown User
+ * @throws 404 Unkown User
  * @throws 400 Deactivated User - if includesInactive is false & user is deactivated
  */
 async function getPryvConnectionAndStatus (partnerUserId, includesInactive = false) {

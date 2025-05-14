@@ -26,6 +26,9 @@ function expressErrorHandler (err, req, res, next) {
   }
   const statusCode = err.statusCode || 501;
   res.status(statusCode);
+  if (statusCode === 404) {
+    res.log404 = true; // tells the logger to keep this 404 in the logs.
+  }
   const errorContent = { error: err.message };
   if (err.errorObject) errorContent.errorObject = err.errorObject;
   res.json(errorContent);
@@ -35,14 +38,14 @@ function expressErrorHandler (err, req, res, next) {
 
 function unkownRessource (msg, obj) {
   const e = new Error('Ressource not found: ' + msg);
-  e.statusCode = 400;
+  e.statusCode = 404;
   if (obj) e.errorObject = obj;
   throw e;
 }
 
 function unauthorized (msg, obj) {
   const e = new Error('Unauthorized: ' + msg);
-  e.statusCode = 404;
+  e.statusCode = 401;
   if (obj) e.errorObject = obj;
   throw e;
 }

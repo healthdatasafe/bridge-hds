@@ -19,7 +19,7 @@ describe('[USEX] Users', () => {
 
   it('[USEU] GET /user/:userId:/status - Unkown User', async () => {
     const result = await apiTest().get(`/user/${testRnd}/status`).set(partnerAuth());
-    assert.equal(result.status, 400);
+    assert.equal(result.status, 404);
     assert.deepEqual(result.body, {
       error: 'Ressource not found: Unkown user',
       errorObject: { userId: testRnd }
