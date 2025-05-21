@@ -4,6 +4,8 @@
  */
 let plugin;
 
+const pluginVersion = 0;
+
 const streamIds = {
   mainUserStreamId: null // this is the stream id on userAccount used to store the data
 };
@@ -55,6 +57,6 @@ async function newData (partnerUserId, data) {
   const syncTime = result[0].event.modified;
   const createdEventId = result[0].event.id;
   // log sync status on next tick
-  process.nextTick(() => { plugin.logSyncStatus(partnerUserId, syncTime, { createdEventId }); });
+  process.nextTick(() => { plugin.logSyncStatus(partnerUserId, syncTime, { createdEventId, pluginVersion }); });
   return result;
 }

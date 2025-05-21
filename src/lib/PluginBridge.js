@@ -26,7 +26,7 @@ class PluginBridge {
   #config;
 
   constructor () {
-    this.logger = getLogger('pligin:' + this.key);
+    this.logger = getLogger('plugin:' + this.key);
     this.errors = errors;
   }
 
@@ -94,8 +94,8 @@ class PluginBridge {
    * @param [time] {number} - EPOCH the time of the synchonization (if null now)
    * @param [content] {Object} - a meaningfull object for the plugin sync status
    */
-  async logSyncStatus (partner, time, content) {
-    return logSyncStatus(partner, time, content);
+  async logSyncStatus (partnerUserId, time, content) {
+    return logSyncStatus(partnerUserId, time, content);
   }
 }
 
