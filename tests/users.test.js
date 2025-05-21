@@ -17,6 +17,12 @@ describe('[USEX] Users', () => {
     mainStreamId = firsStream.streamId;
   });
 
+  it('[USEL] GET /user/list/apiEndpoints', async () => {
+    const result = await apiTest().get('/user/list/apiEndpoints').set(partnerAuth());
+    assert.equal(result.status, 200);
+    assert.ok(result.body.users.length > 0);
+  });
+
   it('[USEU] GET /user/:userId:/status - Unkown User', async () => {
     const result = await apiTest().get(`/user/${testRnd}/status`).set(partnerAuth());
     assert.equal(result.status, 404);

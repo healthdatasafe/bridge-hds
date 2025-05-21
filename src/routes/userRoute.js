@@ -71,4 +71,16 @@ router.post('/:partnerUserId/status', async (req, res) => {
   res.json(result);
 });
 
+/**
+ * Get a list of all user's apiEndpoint
+ */
+router.get('/list/apiEndPoints', async (req, res) => {
+  const users = [];
+  function forEachEvent (event) {
+    users.push(event);
+  }
+  await user.getAllUsersApiEndpoints(forEachEvent);
+  res.json({ users });
+});
+
 module.exports = router;

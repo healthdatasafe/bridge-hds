@@ -7,7 +7,8 @@ module.exports = {
   exists,
   addCredentialToBridgeAccount,
   getPryvConnectionAndStatus,
-  setStatus
+  setStatus,
+  getAllUsersApiEndpoints
 };
 
 /**
@@ -166,4 +167,14 @@ async function getPryvConnectionAndStatus (partnerUserId, includesInactive = fal
     ...statusResult,
     connection
   };
+}
+
+/**
+ * Get all users and their status
+ * @param {callback} forEachEvent - called for Each event
+ */
+async function getAllUsersApiEndpoints (forEachEvent) {
+  const now = (new Date()).getTime() / 1000;
+  const queryParams = { fromTime: 0, toTime: now, streams: [getUserParentStreamId()], types: ['credentials/pryv-api-endpoint'] };
+  return await bridgeConnection().getEventsStreamed(queryParams, forEachEvent);
 }
