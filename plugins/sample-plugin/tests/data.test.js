@@ -41,7 +41,7 @@ describe('[PLTX] Plugin sample test', () => {
       .set(partnerAuth());
     const syncStatus = statusRes.body.syncStatus;
     assert.equal(syncStatus.lastSync, event.modified);
-    assert.deepEqual(syncStatus.content, { createdEventId: event.id });
+    assert.deepEqual(syncStatus.content, { createdEventId: event.id, pluginVersion: 0 });
   });
 
   it('[PLTA] Call the API POST /data/test/{userId}/api', async () => {

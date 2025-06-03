@@ -1,5 +1,6 @@
 /node_modules
 /application.log
+/debugLog
 /coverage
 /storage
 /localConfig.yml
