@@ -17,6 +17,8 @@ A sample plugin is available as a starting point in `sample-plugin` folder.
 
 ### Onboarding Flow
 
+⚠️ Before "onboarding" a user consider checking it's status with `GET /user/{partnerUserId}/status`  
+
 This is a summary of the flow in case of sucessfull onboarding
 
 A detailed flow can be found in [./doc/onboarding-flow-detail.md](./doc/onboarding-flow-detail.md)
@@ -292,10 +294,10 @@ Exemple:
 - [X] define return parameters 
 - [X] create base stream structure for user
 - [ ] Finalize base stream structure for user
-- [ ] Add data synchronization status
+- [X] Add data synchronization status
 - [ ] Deactivate and set the account as "unauthorized" when access is revoked.
-- [ ] Allow partner to revoke an access
-- [ ] Evaluate an erroRedirect for onbording with the same schema than forwarding the secret.
+- [X] Allow partner to revoke an access
+- [ ] Evaluate an errorRedirect for onbording with the same schema than forwarding the secret.
 - [ ] Add a logic to ensure that the same account cannot be linked twice
 - [ ] Remotely load & override config from partner Account (option)
 - [X] Add security to check requests are coming from Partner
