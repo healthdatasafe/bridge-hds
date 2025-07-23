@@ -6,7 +6,7 @@ const ShortUniqueId = require('short-unique-id');
 
 const { getApp } = require('../../src/server');
 const pryvService = require('../../src/lib/pryvService');
-const pryv = require('pryv');
+const { pryv } = require('hds-lib');
 const user = require('../../src/methods/user.js');
 
 module.exports = {

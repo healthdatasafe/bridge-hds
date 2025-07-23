@@ -2,7 +2,7 @@
  * Manage the bridge connection and interaction
  */
 const { getConfig } = require('boiler');
-const { Connection } = require('pryv');
+const { Connection } = require('hds-lib').pryv;
 const { internalError, serviceError } = require('../errors');
 const { getLogger } = require('boiler');
 const logger = getLogger('bridgeAccount');

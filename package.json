@@ -17,14 +17,14 @@
     "npm": ">=9.6.5",
     "node": ">=20.9.0"
   },
-  "author": "Clayver",
-  "license": "ULICENSED",
+  "author": "Health Data Safe",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "boiler": "github:perki/pryv-boiler",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-promise-router": "^4.1.1",
-    "pryv": "^2.3.8",
+    "hds-lib": "git+https://github.com/healthdatasafe/hds-lib-js.git",
     "short-unique-id": "^5.2.0"
   },
   "devDependencies": {

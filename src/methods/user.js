@@ -1,6 +1,6 @@
 const { bridgeConnection, streamIdForUserId, getUserParentStreamId, getActiveUserStreamId } = require('../lib/bridgeAccount');
 const { unkownRessource, serviceError, badRequest } = require('../errors');
-const pryv = require('pryv');
+const { pryv } = require('hds-lib');
 
 module.exports = {
   status,

@@ -3,7 +3,7 @@
  */
 const { getConfig } = require('../src/initBoiler')('createAccount');
 const pryvService = require('../src/lib/pryvService');
-const pryv = require('pryv');
+const { pryv } = require('hds-lib');
 
 const readline = require('node:readline');
 const rl = readline.createInterface({

@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const pryv = require('pryv');
+const pryv = require('hds-lib').pryv;
 const superagent = pryv.utils.superagent;
 
 const ShortUniqueId = require('short-unique-id');

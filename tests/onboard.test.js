@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { init: initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser } = require('./helpers/testServer');
 const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 const ShortUniqueId = require('short-unique-id');
-const pryv = require('pryv');
+const { pryv } = require('hds-lib');
 
 describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
