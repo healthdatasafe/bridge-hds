@@ -1,7 +1,7 @@
 
 ### Onboarding Detailed Flow 
 
-Case user does not extis
+Case user does not exist
 
 ```mermaid
 sequenceDiagram

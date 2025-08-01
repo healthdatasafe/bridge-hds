@@ -6,8 +6,9 @@ const ShortUniqueId = require('short-unique-id');
 
 const { getApp } = require('../../src/server');
 const pryvService = require('../../src/lib/pryvService');
-const { pryv } = require('hds-lib');
+const { pryv, initHDSModel } = require('hds-lib');
 const user = require('../../src/methods/user.js');
+const { requiredPermissionsAndStreams } = require('../../src/lib/plugins.js');
 
 module.exports = {
   init,
@@ -16,7 +17,8 @@ module.exports = {
   pryvService,
   createUserAndPermissions,
   createOnboardedUser,
-  partnerAuth
+  partnerAuth,
+  getApp
 };
 
 let app = null;
@@ -27,6 +29,7 @@ let config = null;
  * @returns {Promise<null>}
  */
 async function init () {
+  await initHDSModel();
   config = await getConfig();
   app = await getApp();
   await pryvService.init();
@@ -63,13 +66,17 @@ function configGet (key) {
  * @param {string} [appId] - default: 'bridge-test-suite'
  * @param {string} [password] - if not provided will be 'pass{usernam}'
  * @param {string} [email] - if not provided will be '{usernam}@hds.bogus'
+ * @param {Array} [streams] - streams to create
  * @returns {Object} username, personalApiEndpoint, appId, appApiEndpoint
  */
-async function createUserAndPermissions (username, permissions, appId = 'bridge-test-suite', password, email) {
+async function createUserAndPermissions (username, permissions, appId = 'bridge-test-suite', password, email, streams = []) {
   password = password || 'pass_' + username;
   email = email || username + '@hds.bogus';
   const newUser = await pryvService.createuser(username, password, email);
   const personalConnection = new pryv.Connection(newUser.apiEndpoint);
+  // -- create streams
+  const apiCallStreamCreate = streams.map(s => ({ method: 'streams.create', params: s }));
+  await personalConnection.api(apiCallStreamCreate);
 
   // -- create access
   const accessRequest = {
@@ -99,9 +106,9 @@ async function createUserAndPermissions (username, permissions, appId = 'bridge-
 async function createOnboardedUser () {
   const partnerUserId = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 18 })).rnd();
   const username = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
-  const permissions = configGet('service:userPermissionRequest');
+  const { permissions, streams } = requiredPermissionsAndStreams(configGet('service:userPermissionRequest'));
   const appId = configGet('service:appId');
-  const result = await createUserAndPermissions(username, permissions, appId);
+  const result = await createUserAndPermissions(username, permissions, appId, null, null, streams);
   await user.addCredentialToBridgeAccount(partnerUserId, result.appApiEndpoint);
   result.partnerUserId = partnerUserId;
   return result;

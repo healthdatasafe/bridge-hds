@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const logger = require('boiler').getLogger('plugins');
+const { model } = require('hds-lib');
 
 module.exports = {
   initWithExpressApp,
-  advertiseNewUserToPlugins
+  advertiseNewUserToPlugins,
+  requiredPermissionsAndStreams
 };
 
 // load plugins
@@ -19,6 +21,21 @@ async function initWithExpressApp (app) {
     await plugin.init(app);
     logger.info(`Loaded plugin: ${plugin.key}`);
   }
+}
+
+/**
+ * Get plugin required permissions
+ */
+function requiredPermissionsAndStreams (existingPermissions = []) {
+  // get the list of required Items
+  const itemKeys = new Set();
+  for (const plugin of plugins) {
+    plugin.potentialCreatedItemKeys.forEach(itemKey => itemKeys.add(itemKey));
+  }
+  //
+  const streams = model.streams.getNecessaryListForItems(itemKeys);
+  const permissions = model.authorizations.forItemKeys(itemKeys, { defaultLevel: 'manage', preRequest: existingPermissions });
+  return { permissions, streams };
 }
 
 /**

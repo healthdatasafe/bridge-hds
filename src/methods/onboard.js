@@ -5,7 +5,7 @@ const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');
 
 const ShortUniqueId = require('short-unique-id');
-const { advertiseNewUserToPlugins } = require('../lib/plugins.js');
+const { advertiseNewUserToPlugins, requiredPermissionsAndStreams } = require('../lib/plugins.js');
 const onboardingSecretGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 24 });
 
 const logger = getLogger('onboard');
@@ -33,13 +33,18 @@ const settings = {
 async function init () {
   const config = await getConfig();
   settings.requestingAppId = config.get('service:appId');
-  settings.requestedPermissions = config.get('service:userPermissionRequest');
   settings.consentMessage = config.get('service:consentMessage');
-  validatePermissions(settings.requestedPermissions);
   settings.returnURL = config.get('baseURL') + '/user/onboard/finalize/';
 
   settings.apiAccessURL = (await pryvService.service().info()).access;
   settings.partnerURLs = config.get('partnerURLs');
+
+  // add permissions and streams from plugins
+  const permissionsFromSettings = config.get('service:userPermissionRequest');
+  validatePermissions(permissionsFromSettings);
+  const { permissions, streams } = requiredPermissionsAndStreams(permissionsFromSettings);
+  settings.requestedPermissions = permissions;
+  settings.ensureBaseStreams = streams;
 }
 
 /**
@@ -66,6 +71,7 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
     returnURL: settings.returnURL + partnerUserId, // add partneruserid to return URL
     clientData:
       {
+        'app-web-auth:ensureBaseStreams': settings.ensureBaseStreams,
         'app-web-auth:description':
             {
               type: 'note/txt',
@@ -251,6 +257,7 @@ function validatePermissions (permissions) {
   if (!Array.isArray(permissions)) internalError('Permissions setting should be an array: ' + JSON.stringify(permissions, null, 2));
   if (permissions.length === 0) internalError('Permissions setting should have one element ' + JSON.stringify(permissions, null, 2));
   for (const p of permissions) {
+    if (p.streamId === '*' && p.level === 'manage' && p.defaultName === undefined) continue;
     for (const k of ['streamId', 'level', 'defaultName']) {
       if (!p[k] || typeof p[k] !== 'string') internalError('Permissions setting is not valid ' + JSON.stringify(p, null, 2));
     }

@@ -1,11 +1,11 @@
 /* eslint-env mocha */
-require('./helpers/testServer');
 const assert = require('node:assert/strict');
 const { init: initTestServer, apiTest, partnerAuth, createOnboardedUser } = require('./helpers/testServer');
 const ShortUniqueId = require('short-unique-id');
 const { getConfig } = require('boiler');
 
-describe('[USEX] Users', () => {
+describe('[USEX] Users', function () {
+  this.timeout(5000);
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
   let mainStreamId = null;
 

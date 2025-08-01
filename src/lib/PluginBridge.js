@@ -21,6 +21,15 @@ class PluginBridge {
   errors;
 
   /**
+   * returns the data items this plugin is going to create
+   * From this permissions will be adjusted
+   * @property {Array<string>} - array of itemKeys
+   */
+  get potentialCreatedItemKeys () {
+    return [];
+  }
+
+  /**
    * private instance of config
    */
   #config;

@@ -14,6 +14,15 @@ class PluginSample extends PluginBridge {
   }
 
   /**
+   * returns the data items this plugin is going to create
+   * From this permissions will be adjusted
+   * @property {Array<string>} - array of itemKeys
+   */
+  get potentialCreatedItemKeys () {
+    return ['body-weight'];
+  }
+
+  /**
    * Must be exposed, called once at boot.
    * Use this to declare your routes.
    * @param {Express.Application} app

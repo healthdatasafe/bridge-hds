@@ -5,8 +5,10 @@ const { init: initTestServer, apiTest, configGet, createUserAndPermissions, part
 const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
 const ShortUniqueId = require('short-unique-id');
 const { pryv } = require('hds-lib');
+const { requiredPermissionsAndStreams } = require('../src/lib/plugins');
 
-describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
+describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function () {
+  this.timeout(5000);
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
   let captureServer;
   before(async () => {
@@ -43,14 +45,16 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', () => {
     assert.equal(resultOnboardResponse.code, 201);
     const returnURL = configGet('baseURL') + '/user/onboard/finalize/' + partnerUserId;
     assert.equal(resultOnboardResponse.returnURL, returnURL);
-    assert.deepEqual(resultOnboardResponse.requestedPermissions, configGet('service:userPermissionRequest'));
+    const { permissions: expectedPermissions, streams: expectedStreams } = requiredPermissionsAndStreams(configGet('service:userPermissionRequest'));
+    assert.deepEqual(resultOnboardResponse.requestedPermissions, expectedPermissions);
     assert.equal(resultOnboardResponse.requestingAppId, configGet('service:appId'));
+    assert.deepEqual(resultOnboardResponse.clientData['app-web-auth:ensureBaseStreams'], expectedStreams);
 
     // -- Phase 2 - create user
     const hdsUserId = 'hds' + testRnd;
     const permissions = resultOnboardResponse.requestedPermissions;
     const appId = resultOnboardResponse.requestingAppId;
-    const newUser = await createUserAndPermissions(hdsUserId, permissions, appId);
+    const newUser = await createUserAndPermissions(hdsUserId, permissions, appId, null, null, expectedStreams);
 
     // -- Phase 3 - simulate access change state
     const newState = {
