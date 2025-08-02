@@ -26,9 +26,10 @@ class PluginSample extends PluginBridge {
    * Must be exposed, called once at boot.
    * Use this to declare your routes.
    * @param {Express.Application} app
+   * @param {Function} bridgeConnectionGetter - to get the current pryv.Connection
    */
-  async init (app) {
-    await super.init(); // keep await super.init();
+  async init (app, bridgeConnectionGetter) {
+    await super.init(app, bridgeConnectionGetter); // keep await super.init();
     if (process.env.NODE_ENV !== 'test') throw new Error('This plugin is only for test purposes');
     // initalize singletons & config
     for (const init of initAsyncComponents) await init(this);

@@ -34,6 +34,11 @@ class PluginBridge {
    */
   #config;
 
+  /**
+   * private instance of bridgeConnectionGetter (form lib/bridgeAccount)
+   */
+  #bridgeConnectionGetter;
+
   constructor () {
     this.logger = getLogger('plugin:' + this.key);
     this.errors = errors;
@@ -47,12 +52,23 @@ class PluginBridge {
   }
 
   /**
+   * @property {pryv.Connection} - connection to bridge managing account
+   */
+  get bridgeConnection () {
+    return this.#bridgeConnectionGetter();
+  }
+
+  /**
   * Must be exposed, called once at boot.
   * Use this to declare your routes.
   * @param {Express.Application} app
+  * @param {Function} bridgeConnectionGetter - to get the current pryv.Connection
   */
-  async init (app) {
+  async init (app, bridgeConnectionGetter) {
+    if (!app) throw new Error('Missing "app" param');
+    if (!bridgeConnectionGetter) throw new Error('Missing "bridgeConnectionGetter" param');
     this.#config = await getConfig();
+    this.#bridgeConnectionGetter = bridgeConnectionGetter;
     // perform async initaliazion tasks here
     // load your routes
     // when overriden call init.super()

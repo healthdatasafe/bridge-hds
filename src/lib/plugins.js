@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('boiler').getLogger('plugins');
 const { model } = require('hds-lib');
+const { bridgeConnection } = require('./bridgeAccount');
 
 module.exports = {
   initWithExpressApp,
@@ -18,7 +19,7 @@ const plugins = loadPluginsModules();
  */
 async function initWithExpressApp (app) {
   for (const plugin of plugins) {
-    await plugin.init(app);
+    await plugin.init(app, bridgeConnection);
     logger.info(`Loaded plugin: ${plugin.key}`);
   }
 }

@@ -36,6 +36,7 @@ module.exports = {
  * @returns {Connection}
  */
 function bridgeConnection () {
+  if (!_bridgeConnection) throw new Error('Init bridgeAccount first');
   return _bridgeConnection;
 }
 
