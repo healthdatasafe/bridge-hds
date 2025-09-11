@@ -1,6 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const pryv = require('hds-lib').pryv;
-const superagent = pryv.utils.superagent;
+const { HDSService } = require('hds-lib');
 
 const ShortUniqueId = require('short-unique-id');
 const { internalError } = require('../errors');
@@ -16,7 +15,7 @@ module.exports = {
 };
 
 /**
- * @type {pryv.Service}
+ * @type {HDSService}
  */
 let serviceSingleton;
 
@@ -27,8 +26,8 @@ let infosSingleton;
 let config;
 
 /**
- * Get current Pryv service
- * @returns {pryv.Service}
+ * Get current HDSService service
+ * @returns {HDSService}
  */
 function service () {
   if (serviceSingleton == null) throw new Error('Init pryvService first');
@@ -38,18 +37,18 @@ function service () {
 /**
  * Initialize Pryv service from config and creates a singleton
  * accessible via service()
- * @returns {pryv.Service}
+ * @returns {HDSService}
  */
 async function init () {
   if (infosSingleton) return infosSingleton;
   config = (await getConfig()).get('service');
   if (!config.appId) throw new Error('Cannot find appId in config');
   try {
-    serviceSingleton = new pryv.Service(config.serviceInfoURL);
+    serviceSingleton = new HDSService(config.serviceInfoURL);
     infosSingleton = await serviceSingleton.info();
     return infosSingleton;
   } catch (err) {
-    internalError('Failed connecting to service instance', config);
+    internalError('Failed connecting to service instance ' + err.message, config);
   }
   return null;
 }
@@ -75,8 +74,12 @@ async function createuser (username, password, email) {
   email = email || username + '@hds.bogus';
   try {
     // create user
-    const res = await pryv.utils.superagent.post(host + 'users')
-      .send({
+    const res = await fetch(host + 'users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         appId: config.appId,
         username,
         password,
@@ -84,9 +87,11 @@ async function createuser (username, password, email) {
         invitationtoken: 'enjoy',
         languageCode: 'en',
         referer: 'none'
-      });
-    if (res.body.apiEndpoint == null) throw new Error('Cannot find apiEndpoint in response');
-    return { apiEndpoint: res.body.apiEndpoint, username: res.body.username, password };
+      })
+    });
+    const resBody = await res.json();
+    if (resBody.apiEndpoint == null) throw new Error('Cannot find apiEndpoint in response');
+    return { apiEndpoint: resBody.apiEndpoint, username: resBody.username, password };
   } catch (e) {
     logger.error('Failed creating user ', e.message);
     throw new Error('Failed creating user ' + host + 'users');
@@ -99,7 +104,7 @@ async function createuser (username, password, email) {
  * @returns {boolean}
  */
 async function userExists (userId) {
-  const userExists = (await superagent.get(infosSingleton.register + userId + '/check_username')).body;
+  const userExists = await (await fetch(infosSingleton.register + userId + '/check_username')).json();
   if (typeof userExists.reserved === 'undefined') throw Error('Pryv invalid user exists response ' + JSON.stringify(userExists));
   return userExists.reserved;
 }
@@ -110,7 +115,7 @@ async function userExists (userId) {
  */
 async function getHost () {
   // get available hosting
-  const hostings = (await superagent.get(infosSingleton.register + 'hostings').set('accept', 'json')).body;
+  const hostings = await (await fetch(infosSingleton.register + 'hostings')).json();
   let hostingCandidate = null;
   findOneHostingKey(hostings, 'N');
   function findOneHostingKey (o, parentKey) {
