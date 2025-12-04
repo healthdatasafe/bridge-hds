@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const { HDSService } = require('hds-lib');
+const { HDSService, initHDSModel } = require('hds-lib');
 
 const ShortUniqueId = require('short-unique-id');
 const { internalError } = require('../errors');
@@ -46,6 +46,7 @@ async function init () {
   try {
     serviceSingleton = new HDSService(config.serviceInfoURL);
     infosSingleton = await serviceSingleton.info();
+    await initHDSModel();
     return infosSingleton;
   } catch (err) {
     internalError('Failed connecting to service instance ' + err.message, config);
@@ -137,7 +138,7 @@ async function getHost () {
 }
 
 const userIdGenerator = new ShortUniqueId({ dictionary: 'alphanum_lower', length: 7 });
-function getNewUserId (Model, startWith = 'x') {
+function getNewUserId (startWith = 'x') {
   const id = startWith + userIdGenerator.rnd();
   return id;
 }

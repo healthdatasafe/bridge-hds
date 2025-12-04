@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const logger = require('boiler').getLogger('plugins');
-const { model } = require('hds-lib');
+const { initHDSModel, getHDSModel } = require('hds-lib');
 const { bridgeConnection } = require('./bridgeAccount');
 
 module.exports = {
@@ -18,6 +18,7 @@ const plugins = loadPluginsModules();
  * @param {Express.Application} app
  */
 async function initWithExpressApp (app) {
+  await initHDSModel();
   for (const plugin of plugins) {
     await plugin.init(app, bridgeConnection);
     logger.info(`Loaded plugin: ${plugin.key}`);
@@ -34,8 +35,8 @@ function requiredPermissionsAndStreams (existingPermissions = []) {
     plugin.potentialCreatedItemKeys.forEach(itemKey => itemKeys.add(itemKey));
   }
   //
-  const streams = model.streams.getNecessaryListForItems(itemKeys);
-  const permissions = model.authorizations.forItemKeys(itemKeys, { defaultLevel: 'manage', preRequest: existingPermissions });
+  const streams = getHDSModel().streams.getNecessaryListForItems(itemKeys);
+  const permissions = getHDSModel().authorizations.forItemKeys(itemKeys, { defaultLevel: 'manage', preRequest: existingPermissions });
   return { permissions, streams };
 }
 
