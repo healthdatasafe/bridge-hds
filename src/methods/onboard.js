@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const { bridgeConnection, streamIdForUserId, getUserParentStreamId, logErrorOnBridgeAccount } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, logErrorOnBridgeAccount, getHDSUserParentStreamId } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
 const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');
@@ -55,7 +55,7 @@ async function init () {
 async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   // check if user is active
 
-  const userStatus = await user.status(partnerUserId, false);
+  const userStatus = await user.statusForPartnerUserId(partnerUserId, false);
   if (userStatus !== null) {
     return {
       type: 'userExists',
@@ -93,7 +93,7 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
 
   // -- store request intent
   const initiateResult = { redirectURLs, webhookClientData, responseBody, onboardingSecret };
-  await authStatusStore(partnerUserId, initiateResult);
+  await authStatusStoreInitiate(partnerUserId, initiateResult);
 
   const result = {
     type: 'authRequest',
@@ -202,7 +202,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
  * @returns {Array} of status
  */
 async function authStatusesGet (partnerUserId) {
-  const userStreamId = streamIdForUserId(partnerUserId);
+  const userStreamId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
     params: { streams: [userStreamId], types: ['temp-status/bridge-auth-request'] }
@@ -212,16 +212,16 @@ async function authStatusesGet (partnerUserId) {
   return response.events || [];
 }
 
-async function authStatusStore (partnerUserId, payload) {
-  const userStreamId = streamIdForUserId(partnerUserId);
+async function authStatusStoreInitiate (partnerUserId, payload) {
+  const userPartnerStreamId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'streams.create',
-    params: { id: userStreamId, parentId: getUserParentStreamId(), name: partnerUserId }
+    params: { id: userPartnerStreamId, parentId: getPartnerUserParentStreamId(), name: partnerUserId }
   }, {
     method: 'events.create',
     params: {
       type: 'temp-status/bridge-auth-request',
-      streamIds: [userStreamId],
+      streamIds: [userPartnerStreamId],
       content: payload
     }
   }];

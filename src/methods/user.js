@@ -1,13 +1,13 @@
-const { bridgeConnection, streamIdForUserId, getUserParentStreamId, getActiveUserStreamId } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, getActiveUserStreamId, streamIdForHDSUsername, getHDSUserParentStreamId } = require('../lib/bridgeAccount');
 const { unkownRessource, serviceError, badRequest } = require('../errors');
 const { pryv } = require('hds-lib');
 
 module.exports = {
-  status,
+  statusForPartnerUserId,
   exists,
   addCredentialToBridgeAccount,
   getPryvConnectionAndStatus,
-  setStatus,
+  setStatusForPartnerUserId,
   getAllUsersApiEndpoints
 };
 
@@ -18,13 +18,24 @@ module.exports = {
  * @returns {Event} - the created event content
  */
 async function addCredentialToBridgeAccount (partnerUserId, appApiEndpoint) {
-  const streamUserId = streamIdForUserId(partnerUserId);
+  // check apiEndpoint status for username
+  const hdsConnection = new pryv.Connection(appApiEndpoint);
+  const accessInfo = await hdsConnection.accessInfo();
+  const hdsUsername = accessInfo?.user?.username;
+  if (hdsUsername == null) throw serviceError('Failed getting username from accessInfo', { accessInfo });
+
+  // create event
+  const streamPartnerUserId = streamIdForPartnerUserId(partnerUserId);
+  const streamHDSUsername = streamIdForHDSUsername(hdsUsername);
   const apiCalls = [{
     method: 'streams.create',
-    params: { id: streamUserId, parentId: getUserParentStreamId(), name: partnerUserId }
+    params: { id: streamPartnerUserId, parentId: getPartnerUserParentStreamId(), name: partnerUserId }
+  }, {
+    method: 'streams.create',
+    params: { id: streamHDSUsername, parentId: getHDSUserParentStreamId(), name: hdsUsername }
   }, {
     method: 'events.create',
-    params: { streamIds: [streamUserId, getActiveUserStreamId()], type: 'credentials/pryv-api-endpoint', content: appApiEndpoint }
+    params: { streamIds: [streamPartnerUserId, streamHDSUsername, getActiveUserStreamId()], type: 'credentials/pryv-api-endpoint', content: appApiEndpoint }
   }];
   const result = await bridgeConnection().api(apiCalls);
   if (result[1]?.error?.id) throw serviceError('Failed add user credentials', result[1]);
@@ -32,7 +43,7 @@ async function addCredentialToBridgeAccount (partnerUserId, appApiEndpoint) {
 }
 
 async function exists (partnerUserId) {
-  const streamUserId = streamIdForUserId(partnerUserId);
+  const streamUserId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
     params: { streams: [streamUserId], limit: 1, types: ['credentials/pryv-api-endpoint'] }
@@ -62,8 +73,8 @@ async function exists (partnerUserId) {
  * @returns {UserStatus|null}
  * @throws 404 Unkown User
  */
-async function status (partnerUserId, throwUnkown = true) {
-  const streamUserId = streamIdForUserId(partnerUserId);
+async function statusForPartnerUserId (partnerUserId, throwUnkown = true) {
+  const streamUserId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
     params: { streams: [streamUserId], limit: 1, types: ['credentials/pryv-api-endpoint'] }
@@ -104,11 +115,11 @@ async function status (partnerUserId, throwUnkown = true) {
   return result;
 }
 
-async function setStatus (partnerUserId, active) {
-  const streamUserId = streamIdForUserId(partnerUserId);
+async function setStatusForPartnerUserId (partnerUserId, active) {
+  const streamPartnerUserId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
-    params: { streams: [streamUserId], limit: 1, types: ['credentials/pryv-api-endpoint'] }
+    params: { streams: [streamPartnerUserId], limit: 1, types: ['credentials/pryv-api-endpoint'] }
   }];
   const resultFromBC = await bridgeConnection().api(apiCalls);
   if (resultFromBC[0]?.error?.id === 'unknown-referenced-resource') unkownRessource('Unkown user', { userId: partnerUserId });
@@ -158,7 +169,7 @@ async function setStatus (partnerUserId, active) {
  * @throws 400 Deactivated User - if includesInactive is false & user is deactivated
  */
 async function getPryvConnectionAndStatus (partnerUserId, includesInactive = false) {
-  const statusResult = await status(partnerUserId);
+  const statusResult = await statusForPartnerUserId(partnerUserId);
   if (!statusResult.user.active && !includesInactive) {
     badRequest('Deactivated User', { userId: partnerUserId });
   }
@@ -175,6 +186,6 @@ async function getPryvConnectionAndStatus (partnerUserId, includesInactive = fal
  */
 async function getAllUsersApiEndpoints (forEachEvent) {
   const now = (new Date()).getTime() / 1000;
-  const queryParams = { fromTime: 0, toTime: now, streams: [getUserParentStreamId()], types: ['credentials/pryv-api-endpoint'] };
+  const queryParams = { fromTime: 0, toTime: now, streams: [getPartnerUserParentStreamId()], types: ['credentials/pryv-api-endpoint'] };
   return await bridgeConnection().getEventsStreamed(queryParams, forEachEvent);
 }

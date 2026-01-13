@@ -53,7 +53,7 @@ router.get('/:partnerUserId/status', async (req, res) => {
   errors.assertFromPartner(req);
   const partnerUserId = req.params.partnerUserId;
   errors.assertValidPartnerUserId(partnerUserId);
-  const result = await user.status(partnerUserId);
+  const result = await user.statusForPartnerUserId(partnerUserId);
   res.json(result);
 });
 
@@ -67,7 +67,7 @@ router.post('/:partnerUserId/status', async (req, res) => {
   errors.assertValidPartnerUserId(partnerUserId);
   const active = req.body.active;
   if (active !== true && active !== false) errors.badRequest('active must be true or false');
-  const result = await user.setStatus(partnerUserId);
+  const result = await user.setStatusForPartnerUserId(partnerUserId);
   res.json(result);
 });
 

@@ -23,8 +23,10 @@ const settings = {
 module.exports = {
   init,
   bridgeConnection,
-  streamIdForUserId,
-  getUserParentStreamId,
+  streamIdForPartnerUserId,
+  streamIdForHDSUsername,
+  getPartnerUserParentStreamId,
+  getHDSUserParentStreamId,
   getActiveUserStreamId,
   logErrorOnBridgeAccount,
   getErrorsOnBridgeAccount,
@@ -64,6 +66,7 @@ async function init () {
 
 /**
  * Util to get the streamId of a partnerUserId
+ * @returns {string}
  */
 function getActiveUserStreamId () {
   return settings.activeUsersStreamId;
@@ -71,17 +74,38 @@ function getActiveUserStreamId () {
 
 /**
  * Util to get the streamId of a partnerUserId
+ * @returns {string}
  */
-function getUserParentStreamId () {
-  return settings.userParentStreamId;
+function getPartnerUserParentStreamId () {
+  return settings.userParentStreamId + '-partner';
 }
 
 /**
  * Util to get the streamId of a partnerUserId
+ * @returns {string}
  */
-function streamIdForUserId (partnerUserId) {
+function getHDSUserParentStreamId () {
+  return settings.userParentStreamId + '-hds';
+}
+
+/**
+ * Util to get the parter user streamId of a partnerUserId
+ * @param partnerUserId {string}
+ * @returns {string}
+ */
+function streamIdForPartnerUserId (partnerUserId) {
   // if partnerUserId is not streamId compliant .. make it lowercase and alpha only.
-  return settings.userParentStreamId + '-' + partnerUserId;
+  return getPartnerUserParentStreamId() + '-' + partnerUserId;
+}
+
+/**
+ * Util to get the hds user streamId of an hdsUserId
+ * @param hdsUserId {string}
+ * @returns {string}
+ */
+function streamIdForHDSUsername (hdsUserId) {
+  // if partnerUserId is not streamId compliant .. make it lowercase and alpha only.
+  return getHDSUserParentStreamId() + '-' + hdsUserId;
 }
 
 /**
@@ -90,7 +114,10 @@ function streamIdForUserId (partnerUserId) {
 async function ensureBaseStreams () {
   const apiCalls = [{
     method: 'streams.create',
-    params: { parentId: settings.mainStreamId, id: settings.userParentStreamId, name: 'Bridge Users' }
+    params: { parentId: settings.mainStreamId, id: getPartnerUserParentStreamId(), name: 'Bridge Partner Users' }
+  }, {
+    method: 'streams.create',
+    params: { parentId: settings.mainStreamId, id: getHDSUserParentStreamId(), name: 'Bridge HDS Users' }
   }, {
     method: 'streams.create',
     params: { parentId: settings.mainStreamId, id: settings.activeUsersStreamId, name: 'Active Bridge Users' }
@@ -130,7 +157,7 @@ async function logErrorOnBridgeAccount (message, errorObject = {}) {
  * @param [content] {Object} - a meaningfull object for the plugin sync status
  */
 async function logSyncStatus (partnerUserId, time = null, content = null) {
-  const userStreamId = streamIdForUserId(partnerUserId);
+  const userStreamId = streamIdForPartnerUserId(partnerUserId);
   const params = {
     type: 'sync-status/bridge',
     streamIds: [userStreamId],
