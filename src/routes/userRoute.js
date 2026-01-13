@@ -1,4 +1,5 @@
 /**
+ * Routes for user access with partnerId
  * @type {Express.router}
  */
 const router = require('express-promise-router')();

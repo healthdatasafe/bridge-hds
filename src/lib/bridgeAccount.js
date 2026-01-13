@@ -30,7 +30,8 @@ module.exports = {
   getActiveUserStreamId,
   logErrorOnBridgeAccount,
   getErrorsOnBridgeAccount,
-  logSyncStatus
+  logSyncStatus,
+  partnerUserIdFromStreamIds
 };
 
 /**
@@ -96,6 +97,19 @@ function getHDSUserParentStreamId () {
 function streamIdForPartnerUserId (partnerUserId) {
   // if partnerUserId is not streamId compliant .. make it lowercase and alpha only.
   return getPartnerUserParentStreamId() + '-' + partnerUserId;
+}
+
+/**
+ * Util get partnerUserId from a list of streams
+ * @param {Array<string>} streamIds;
+ */
+function partnerUserIdFromStreamIds (streamIds) {
+  const header = getPartnerUserParentStreamId();
+  for (const streamId of streamIds) {
+    if (!streamId.startsWith(header)) continue;
+    return streamId.substring(header.length + 1);
+  }
+  return null;
 }
 
 /**

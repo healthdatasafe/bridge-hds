@@ -89,6 +89,10 @@ class PluginBridge {
   // --------- toolkit ------------- //
 
   /**
+   * Make user accessible for plugin
+   */
+
+  /**
    * Retreive configuration item
    * @param {string} key - path seprated by ":"
    */

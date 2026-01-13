@@ -19,6 +19,7 @@ const plugins = require('./lib/plugins');
 
 const accountRouter = require('./routes/accountRoute');
 const userRouter = require('./routes/userRoute');
+const selfRouter = require('./routes/selfRoute');
 const { expressErrorHandler } = require('./errors');
 const loggerMiddleware = require('./middlewares/logger');
 
@@ -52,6 +53,7 @@ async function getApp () {
   app.use('/static', express.static(path.resolve(__dirname, 'static')));
   app.use('/account', accountRouter);
   app.use('/user', userRouter);
+  app.use('/self', selfRouter);
 
   // init plugins
   await plugins.initWithExpressApp(app);

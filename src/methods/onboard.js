@@ -1,5 +1,5 @@
 const { getConfig, getLogger } = require('boiler');
-const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, logErrorOnBridgeAccount, getHDSUserParentStreamId } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, logErrorOnBridgeAccount } = require('../lib/bridgeAccount');
 const pryvService = require('../lib/pryvService');
 const { internalError, badRequest, serviceError } = require('../errors');
 const user = require('./user.js');

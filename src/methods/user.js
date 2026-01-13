@@ -1,9 +1,10 @@
-const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, getActiveUserStreamId, streamIdForHDSUsername, getHDSUserParentStreamId } = require('../lib/bridgeAccount');
+const { bridgeConnection, streamIdForPartnerUserId, getPartnerUserParentStreamId, getActiveUserStreamId, streamIdForHDSUsername, getHDSUserParentStreamId, partnerUserIdFromStreamIds } = require('../lib/bridgeAccount');
 const { unkownRessource, serviceError, badRequest } = require('../errors');
 const { pryv } = require('hds-lib');
 
 module.exports = {
   statusForPartnerUserId,
+  statusForHDSUsername,
   exists,
   addCredentialToBridgeAccount,
   getPryvConnectionAndStatus,
@@ -111,6 +112,51 @@ async function statusForPartnerUserId (partnerUserId, throwUnkown = true) {
       content: syncEvent?.content,
       lastSync: syncEvent?.time
     }
+  };
+  return result;
+}
+
+/**
+ * Get user status
+ * @param {string} hdsUsername
+ * @param {boolean} [throwUnkown=true] - if truethrow an error, otherwise return null
+ * @returns {UserStatus|null}
+ * @throws 404 Unkown User
+ */
+async function statusForHDSUsername (hdsUsername, throwUnkown = true) {
+  const streamUsername = streamIdForHDSUsername(hdsUsername);
+  const apiCalls = [{
+    method: 'events.get',
+    params: { streams: [streamUsername], limit: 1, types: ['credentials/pryv-api-endpoint'] }
+  }];
+  const resultFromBC = await bridgeConnection().api(apiCalls);
+  if (resultFromBC[0]?.error?.id === 'unknown-referenced-resource') {
+    if (throwUnkown) {
+      unkownRessource('Unkown user', { username: hdsUsername });
+    }
+    return null;
+  }
+  const error = resultFromBC.error || resultFromBC[1]?.error || resultFromBC[1]?.error;
+  if (error) serviceError('Failed to get user status', error);
+  const userEvent = resultFromBC[0].events[0];
+  if (userEvent == null) {
+    if (throwUnkown) {
+      unkownRessource('Unkown user', { userId: hdsUsername });
+    }
+    return null;
+  }
+  // get partnerUserId from streamId
+  const partnerUserId = partnerUserIdFromStreamIds(userEvent.streamIds);
+
+  const result = {
+    user: {
+      active: userEvent.streamIds.includes(getActiveUserStreamId()),
+      partnerUserId,
+      apiEndpoint: userEvent.content,
+      created: userEvent.created,
+      modified: userEvent.modified
+    },
+    syncStatus: { }
   };
   return result;
 }
