@@ -68,11 +68,20 @@ async function getApp () {
  */
 async function launch () {
   const app = await getApp();
-  const configServer = (await getConfig()).get('server');
+  const config = await getConfig();
+  const configServer = config.get('server');
   const port = configServer.port || 7432;
-  const host = configServer.host || '127.0.0.1';
-  await app.listen(port, host);
-  logger.info(`Listening ${host} on port ${port} in mode ${app.get('env')}`);
+  if (process.env.BACKLOOP) {
+    const https = require('https');
+    const httpsOptionsPromise = require('backloop.dev').httpsOptionsPromise;
+    const httpsOptions = await httpsOptionsPromise();
+    https.createServer(httpsOptions, app).listen(port);
+    config.set('baseURL', 'https://mira.backloop.dev:' + port);
+  } else {
+    const host = configServer.host || '127.0.0.1';
+    await app.listen(port, host);
+    logger.info(`Listening ${host} on port ${port} in mode ${app.get('env')}`);
+  }
   return app;
 }
 /* c8 ignore start */

@@ -5,6 +5,7 @@
   "scripts": {
     "start": "NODE_ENV=test LOGS=info node src/start.js --config localConfig.yml",
     "start:prod": "NODE_ENV=production node src/start.js --config localConfig.yml",
+    "start:backloop": "NODE_ENV=development BACKLOOP=true node src/start.js --config localConfig.yml",
     "setup": "scripts/setup.sh",
     "setup-dev-env": "scripts/setup-dev-env.sh",
     "test": "mocha tests plugins/*/tests --test-reporter=spec -- --config localConfig.yml",
@@ -20,6 +21,7 @@
   "author": "Health Data Safe",
   "license": "BSD-3-Clause",
   "dependencies": {
+    "backloop.dev": "^2.0.6",
     "boiler": "github:perki/pryv-boiler",
     "cors": "^2.8.5",
     "express": "^4.19.2",

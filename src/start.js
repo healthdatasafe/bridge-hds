@@ -8,10 +8,9 @@ const numCPUs = os.cpus().length;
 const logger = getLogger('start');
 
 (async () => {
+  const config = await getConfig();
   if (cluster.isMaster) {
-    const config = await getConfig();
     logger.info(`Master process ${process.pid} is running`);
-    logger.info(`Api is exposed on: ${config.get('baseURL')}`);
     const configNumProcesses = config.get('start:numProcesses') || numCPUs;
     const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;
 
@@ -25,5 +24,6 @@ const logger = getLogger('start');
     });
   } else {
     await server.launch();
+    logger.info(`Api is exposed on: ${config.get('baseURL')}`);
   }
 })();
