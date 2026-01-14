@@ -27,6 +27,7 @@
     "express": "^4.19.2",
     "express-promise-router": "^4.1.1",
     "hds-lib": "git+https://github.com/healthdatasafe/hds-lib-js.git",
+    "memored": "^1.1.1",
     "short-unique-id": "^5.2.0"
   },
   "devDependencies": {

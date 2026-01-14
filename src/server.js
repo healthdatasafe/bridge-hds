@@ -78,7 +78,6 @@ async function launch () {
     const httpsOptionsPromise = require('backloop.dev').httpsOptionsPromise;
     const httpsOptions = await httpsOptionsPromise();
     https.createServer(httpsOptions, app).listen(port);
-    config.set('baseURL', 'https://mira.backloop.dev:' + port);
   } else {
     const host = configServer.host || '127.0.0.1';
     await app.listen(port, host);

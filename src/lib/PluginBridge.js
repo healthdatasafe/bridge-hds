@@ -2,6 +2,8 @@ const { getLogger, getConfig } = require('boiler');
 const errors = require('../errors');
 const user = require('../methods/user');
 const { logSyncStatus } = require('./bridgeAccount');
+const { checkAndGetUserApiEndpoint } = require('./autorizationLib');
+const cache = require('./cache');
 
 /**
  * Utility to be extended by all plugins.
@@ -42,6 +44,13 @@ class PluginBridge {
   constructor () {
     this.logger = getLogger('plugin:' + this.key);
     this.errors = errors;
+  }
+
+  /**
+   * @property {cache}
+   */
+  get cache () {
+    return cache;
   }
 
   /**
@@ -106,6 +115,15 @@ class PluginBridge {
    */
   assertFromPartner (req) {
     errors.assertFromPartner(req);
+  }
+
+  /**
+   * Assert and get hdsConnection
+   * @param {Express.Request} req
+   */
+  async assertFromUserAndGetConnection (req) {
+    const { accessInfo, hdsConnection } = await checkAndGetUserApiEndpoint(req);
+    return { accessInfo, hdsConnection };
   }
 
   /**

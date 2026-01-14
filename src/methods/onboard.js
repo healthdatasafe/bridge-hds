@@ -14,8 +14,8 @@ module.exports = {
   init,
   initiate,
   finalize,
-  authStatusesGet,
-  authStatusesClean
+  authStatusesGetFromPartner,
+  authStatusesFromPartnerClean
 };
 
 /**
@@ -93,7 +93,7 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
 
   // -- store request intent
   const initiateResult = { redirectURLs, webhookClientData, responseBody, onboardingSecret };
-  await authStatusStoreInitiate(partnerUserId, initiateResult);
+  await authStatusStoreInitiateFromPartner(partnerUserId, initiateResult);
 
   const result = {
     type: 'authRequest',
@@ -151,7 +151,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   const pollContent = await (await fetch(pollURL)).json();
 
   // safety check that onboard process has started
-  const currentAuthStatuses = await authStatusesGet(partnerUserId);
+  const currentAuthStatuses = await authStatusesGetFromPartner(partnerUserId);
   const matchingStatuses = currentAuthStatuses.filter(s => s.content.responseBody.poll === pollURL);
   if (matchingStatuses.length !== 1) {
     logger.error('No matching pending request for this user', { partnerUserId, pollParam });
@@ -162,7 +162,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
   const webhookParams = Object.assign({ partnerUserId, onboardingSecret: matchingStatusContent.onboardingSecret }, matchingStatusContent.webhookClientData);
 
   // REMOVE pending request in background
-  process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
+  process.nextTick(() => { authStatusesFromPartnerClean(currentAuthStatuses); });
 
   // ACCEPTED
   try {
@@ -201,7 +201,7 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
  * @param {string} partnerUserId
  * @returns {Array} of status
  */
-async function authStatusesGet (partnerUserId) {
+async function authStatusesGetFromPartner (partnerUserId) {
   const userStreamId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'events.get',
@@ -212,7 +212,7 @@ async function authStatusesGet (partnerUserId) {
   return response.events || [];
 }
 
-async function authStatusStoreInitiate (partnerUserId, payload) {
+async function authStatusStoreInitiateFromPartner (partnerUserId, payload) {
   const userPartnerStreamId = streamIdForPartnerUserId(partnerUserId);
   const apiCalls = [{
     method: 'streams.create',
@@ -234,7 +234,7 @@ async function authStatusStoreInitiate (partnerUserId, payload) {
  * Array of pending authStatus to remove
  * @param {Array<Events>} authStatusEvents
  */
-async function authStatusesClean (authStatusEvents) {
+async function authStatusesFromPartnerClean (authStatusEvents) {
   if (!authStatusEvents || authStatusEvents.length < 1) return;
   const apiCalls = [];
   for (const e of authStatusEvents) {

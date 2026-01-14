@@ -4,12 +4,19 @@ const cluster = require('cluster');
 const os = require('os');
 const server = require('./server');
 const numCPUs = os.cpus().length;
-
 const logger = getLogger('start');
+const cache = require('./lib/cache');
 
 (async () => {
   const config = await getConfig();
+  if (process.env.BACKLOOP) { // in case of backloop use set baseURL first
+    const configServer = config.get('server');
+    const port = configServer.port || 7432;
+    config.set('baseURL', 'https://mira.backloop.dev:' + port);
+  }
+
   if (cluster.isMaster) {
+    await cache.init();
     logger.info(`Master process ${process.pid} is running`);
     const configNumProcesses = config.get('start:numProcesses') || numCPUs;
     const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;
