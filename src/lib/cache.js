@@ -8,10 +8,15 @@ module.exports = {
   cacheGetDel
 };
 
+let isTest = false;
+const testKV = { };
+
 /**
  * Cluster Master only
  */
-async function init () {
+async function init (testMode = false) {
+  isTest = testMode;
+  // if (isTest) return;
   memored.setup({ purgeInterval: 1500 });
 }
 
@@ -19,6 +24,8 @@ async function init () {
  * @returns {Promise<Object>}
  */
 function cacheSet (key, value, expirationMs = null) {
+  if (isTest) { testKV[key] = value; return; }
+
   return new Promise((resolve, reject) => {
     memored.store(key, value, function done (err, expirationTime) {
       if (err) return reject(err);
@@ -31,6 +38,8 @@ function cacheSet (key, value, expirationMs = null) {
  * @returns {Promise<Object>}
  */
 function cacheGet (key) {
+  if (isTest) { return testKV[key]; }
+
   return new Promise((resolve, reject) => {
     memored.read(key, function done (err, value) {
       if (err) return reject(err);
@@ -43,6 +52,7 @@ function cacheGet (key) {
  * @returns {Promise<void>}
  */
 function cacheDel (key) {
+  if (isTest) { delete testKV[key]; return; }
   return new Promise((resolve, reject) => {
     memored.remove(key, function done () {
       return resolve();

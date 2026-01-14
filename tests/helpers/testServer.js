@@ -9,6 +9,7 @@ const pryvService = require('../../src/lib/pryvService');
 const { pryv, initHDSModel } = require('hds-lib');
 const user = require('../../src/methods/user.js');
 const { requiredPermissionsAndStreams } = require('../../src/lib/plugins.js');
+require('../../src/lib/cache.js').init(true);
 
 module.exports = {
   init,
