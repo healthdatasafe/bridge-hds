@@ -71,7 +71,10 @@ async function loadPluginsModules (): Promise<PluginBridge[]> {
 
   const result: PluginBridge[] = [];
   for (const pluginFolderName of pluginFolderNames) {
-    const pluginModule = await import(pluginFolderName);
+    // ESM does not support directory imports — resolve entry point from package.json
+    const pkg = JSON.parse(fs.readFileSync(path.join(pluginFolderName, 'package.json'), 'utf-8'));
+    const entryPoint = path.join(pluginFolderName, pkg.main || 'index.js');
+    const pluginModule = await import(entryPoint);
     const PluginClass = pluginModule.default || pluginModule;
     result.push(new PluginClass());
   }
