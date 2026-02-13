@@ -1,9 +1,9 @@
-/**
- * @type {Express.router}
- */
-const router = require('express-promise-router')();
-const errors = require('../errors/index.js');
-const { getErrorsOnBridgeAccount } = require('../lib/bridgeAccount.js');
+import Router from 'express-promise-router';
+import type { Request, Response } from 'express';
+import * as errors from '../errors/index.ts';
+import { getErrorsOnBridgeAccount } from '../lib/bridgeAccount.ts';
+
+const router = Router();
 
 /**
  * List errors
@@ -13,12 +13,12 @@ const { getErrorsOnBridgeAccount } = require('../lib/bridgeAccount.js');
  *  - limit - (optional) number of events to return
  * result: @see https://pryv.github.io/reference/#authenticate-your-app
  */
-router.get('/errors/', async (req, res) => {
-  errors.assertFromPartner(req);
-  const params = { };
+router.get('/errors/', async (req: Request, res: Response) => {
+  errors.assertFromPartner(req as any);
+  const params: Record<string, number> = { };
   for (const numKey of ['fromTime', 'toTime', 'limit']) {
     if (req.query[numKey] != null) {
-      const val = Number.parseFloat(req.query[numKey]);
+      const val = Number.parseFloat(req.query[numKey] as string);
       if (isNaN(val)) errors.badRequest(`${numKey} value is not a number`, { [numKey]: req.query[numKey] });
       params[numKey] = val;
     }
@@ -27,4 +27,4 @@ router.get('/errors/', async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+export default router;

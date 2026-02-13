@@ -1,15 +1,14 @@
-require('./helpers/testServer');
-const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser } = require('./helpers/testServer');
-const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
-const ShortUniqueId = require('short-unique-id');
-const { pryv } = require('hds-lib');
-const { requiredPermissionsAndStreams } = require('../src/lib/plugins');
+import assert from 'node:assert/strict';
+import { init as initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import { startHttpServerCapture } from './helpers/testWebServerCapture.ts';
+import ShortUniqueId from 'short-unique-id';
+import { pryv } from 'hds-lib';
+import { requiredPermissionsAndStreams } from '../src/lib/plugins.ts';
 
 describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function () {
   this.timeout(5000);
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
-  let captureServer;
+  let captureServer: Awaited<ReturnType<typeof startHttpServerCapture>>;
   before(async () => {
     await initTestServer();
     captureServer = await startHttpServerCapture();
@@ -44,7 +43,7 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function
     assert.equal(resultOnboardResponse.code, 201);
     const returnURL = configGet('baseURL') + '/user/onboard/finalize/' + partnerUserId;
     assert.equal(resultOnboardResponse.returnURL, returnURL);
-    const { permissions: expectedPermissions, streams: expectedStreams } = requiredPermissionsAndStreams(configGet('service:userPermissionRequest'));
+    const { permissions: expectedPermissions, streams: expectedStreams } = requiredPermissionsAndStreams(configGet('service:userPermissionRequest') as unknown[]);
     assert.deepEqual(resultOnboardResponse.requestedPermissions, expectedPermissions);
     assert.equal(resultOnboardResponse.requestingAppId, configGet('service:appId'));
     assert.deepEqual(resultOnboardResponse.clientData['app-web-auth:ensureBaseStreams'], expectedStreams);
@@ -81,12 +80,12 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function
 
     // -- Finaly 1 - Check that webhook has been called properly
     const captured = captureServer.captured.pop();
-    assert.equal(captured.method, 'GET');
-    assert.equal(captured.path, '/');
+    assert.equal(captured!.method, 'GET');
+    assert.equal(captured!.path, '/');
     // keep plugins results to test idependently
-    const capturedQuery = structuredClone(captured.query);
-    const pluginsResults = JSON.parse(capturedQuery.pluginsResultJSON);
-    delete capturedQuery.pluginsResultJSON;
+    const capturedQuery = structuredClone(captured!.query);
+    const pluginsResults = JSON.parse(capturedQuery!.pluginsResultJSON as string);
+    delete (capturedQuery as Record<string, unknown>).pluginsResultJSON;
     assert.deepEqual(capturedQuery, { partnerUserId, onboardingSecret, test: 'Hello test', type: 'SUCCESS' });
     assert.deepEqual(pluginsResults.sample, { dummy: 'Acknowledged by sample plugin' });
 
@@ -205,7 +204,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
     const errorEvent = errorLog.body[0];
     assert.equal(errorEvent.type, 'error/message-object');
     assert.equal(errorEvent.content.message, 'Failed finalizing onboarding');
-    const expectedErrorObject = {
+    const expectedErrorObject: Record<string, unknown> = {
       partnerUserId,
       pollParam: errorEvent.content.errorObject.pollParam,
       innerErrorMessage: 'Failed contacting partner backend',
@@ -233,10 +232,10 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
       if (key === 'sample') {
         assert.deepEqual(value, { dummy: 'Acknowledged by sample plugin' });
       } else {
-        assert.ok(value.error == null);
+        assert.ok((value as Record<string, unknown>).error == null);
       }
     }
-    expectedErrorObject.innerErrorObject.webhookCall.params.pluginsResultJSON = innerErrorObject.webhookCall.params.pluginsResultJSON;
+    (expectedErrorObject.innerErrorObject as any).webhookCall.params.pluginsResultJSON = innerErrorObject.webhookCall.params.pluginsResultJSON;
 
     assert.deepEqual(errorEvent.content.errorObject, expectedErrorObject);
 

@@ -1,18 +1,19 @@
-const assert = require('node:assert/strict');
-const { init: initTestServer, apiTest, partnerAuth, createOnboardedUser } = require('./helpers/testServer');
-const ShortUniqueId = require('short-unique-id');
-const { getConfig } = require('boiler');
+import assert from 'node:assert/strict';
+import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import ShortUniqueId from 'short-unique-id';
+import boiler from 'boiler';
+const { getConfig } = boiler;
 
 describe('[USEX] Users', function () {
   this.timeout(5000);
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
-  let mainStreamId = null;
+  let mainStreamId: string | null = null;
 
   before(async () => {
     await initTestServer();
     // get the main streamId for the userPermissionRequest servic
     const config = await getConfig();
-    const firsStream = config.get('service:userPermissionRequest')[0];
+    const firsStream = (config.get('service:userPermissionRequest') as any[])[0];
     mainStreamId = firsStream.streamId;
   });
 

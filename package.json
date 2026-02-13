@@ -2,21 +2,24 @@
   "name": "bridge-hds",
   "version": "0.0.1",
   "description": "Bridge between a partner Backend and HDS",
-  "scripts": {
-    "start": "NODE_ENV=test LOGS=info node src/start.js --config localConfig.yml",
-    "start:prod": "NODE_ENV=production node src/start.js --config localConfig.yml",
-    "start:backloop": "NODE_ENV=development BACKLOOP=true node src/start.js --config localConfig.yml",
-    "setup": "scripts/setup.sh",
-    "setup-dev-env": "scripts/setup-dev-env.sh",
-    "test": "mocha tests plugins/*/tests --test-reporter=spec -- --config localConfig.yml",
-    "test:coverage": "c8 mocha tests plugins/*/tests --config localConfig.yml",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "lint:change": "eslint $(git diff --name-only HEAD | grep -E '\\.(js|jsx)$' | xargs)"
-  },
+  "type": "module",
+  "main": "src/start.ts",
   "engines": {
     "npm": ">=9.6.5",
-    "node": ">=20.9.0"
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "start": "NODE_ENV=test LOGS=info node --experimental-strip-types src/start.ts --config localConfig.yml",
+    "start:prod": "NODE_ENV=production node --experimental-strip-types src/start.ts --config localConfig.yml",
+    "start:backloop": "NODE_ENV=development BACKLOOP=true node --experimental-strip-types src/start.ts --config localConfig.yml",
+    "setup": "scripts/setup.sh",
+    "setup-dev-env": "scripts/setup-dev-env.sh",
+    "test": "NODE_ENV=test node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' 'plugins/*/tests/**/*.test.ts' --test-reporter=spec -- --config localConfig.yml",
+    "test:coverage": "NODE_ENV=test c8 node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' 'plugins/*/tests/**/*.test.ts' -- --config localConfig.yml",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:change": "eslint $(git diff --name-only HEAD | grep -E '\\.(ts|tsx)$' | xargs)",
+    "typecheck": "tsc --noEmit"
   },
   "author": "Health Data Safe",
   "license": "BSD-3-Clause",
@@ -30,11 +33,17 @@
     "short-unique-id": "^5.2.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.25",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.5.5",
+    "@types/supertest": "^6.0.3",
     "c8": "^9.1.0",
     "eslint": "^9.0.0",
-    "neostandard": "^0.12.0",
     "mocha": "^10.7.3",
+    "neostandard": "^0.12.0",
     "supertest": "^7.0.0",
-    "supertest-session": "^5.0.1"
+    "supertest-session": "^5.0.1",
+    "typescript": "^5.9.3"
   }
 }

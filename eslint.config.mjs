@@ -1,12 +1,12 @@
 import neostandard from 'neostandard';
 
 export default [
-  ...neostandard({ semi: true }),
+  ...neostandard({ semi: true, ts: true }),
   {
     ignores: ['build/test/*', 'node_modules/*']
   },
   {
-    files: ['tests/**/*.js', 'plugins/*/tests/**/*.js'],
+    files: ['tests/**/*.ts', 'plugins/*/tests/**/*.ts'],
     languageOptions: {
       globals: {
         describe: 'readonly',

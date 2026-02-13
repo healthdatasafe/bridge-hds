@@ -1,11 +1,10 @@
-/**
- * @type {Express.router}
- */
-const router = require('express-promise-router')();
+import Router from 'express-promise-router';
+import type { Request, Response } from 'express';
+import * as errors from '../errors/index.ts';
+import * as onboard from '../methods/onboard.ts';
+import * as user from '../methods/user.ts';
 
-const errors = require('../errors/index.js');
-const onboard = require('../methods/onboard.js');
-const user = require('../methods/user.js');
+const router = Router();
 
 /**
  * Onboarding
@@ -14,8 +13,8 @@ const user = require('../methods/user.js');
  *  - partnerUserId
  * result: @see https://pryv.github.io/reference/#authenticate-your-app
  */
-router.post('/onboard/', async (req, res) => {
-  errors.assertFromPartner(req);
+router.post('/onboard/', async (req: Request, res: Response) => {
+  errors.assertFromPartner(req as any);
   const partnerUserId = req.body.partnerUserId;
   errors.assertValidPartnerUserId(partnerUserId);
   const redirectURLs = req.body.redirectURLs;
@@ -37,11 +36,11 @@ router.post('/onboard/', async (req, res) => {
  * returnURL of an onboarding process (from User's consent page)
  * result: @see https://pryv.github.io/reference/#authenticate-your-app
  */
-router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
+router.get('/onboard/finalize/:partnerUserId', async (req: Request, res: Response) => {
   // partnerUserId
-  const partnerUserId = req.params.partnerUserId;
+  const partnerUserId = req.params.partnerUserId!;
   errors.assertValidPartnerUserId(partnerUserId);
-  const pollURL = req.query.prYvpoll;
+  const pollURL = req.query.prYvpoll as string;
   const redirectURL = await onboard.finalize(partnerUserId, pollURL);
   res.redirect(redirectURL);
 });
@@ -49,9 +48,9 @@ router.get('/onboard/finalize/:partnerUserId', async (req, res) => {
 /**
  * Get a userStatus
  */
-router.get('/:partnerUserId/status', async (req, res) => {
-  errors.assertFromPartner(req);
-  const partnerUserId = req.params.partnerUserId;
+router.get('/:partnerUserId/status', async (req: Request, res: Response) => {
+  errors.assertFromPartner(req as any);
+  const partnerUserId = req.params.partnerUserId!;
   errors.assertValidPartnerUserId(partnerUserId);
   const result = await user.status(partnerUserId);
   res.json(result);
@@ -61,9 +60,9 @@ router.get('/:partnerUserId/status', async (req, res) => {
  * Change the status of a user
  * - active: true/false
  */
-router.post('/:partnerUserId/status', async (req, res) => {
-  errors.assertFromPartner(req);
-  const partnerUserId = req.params.partnerUserId;
+router.post('/:partnerUserId/status', async (req: Request, res: Response) => {
+  errors.assertFromPartner(req as any);
+  const partnerUserId = req.params.partnerUserId!;
   errors.assertValidPartnerUserId(partnerUserId);
   const active = req.body.active;
   if (active !== true && active !== false) errors.badRequest('active must be true or false');
@@ -74,13 +73,13 @@ router.post('/:partnerUserId/status', async (req, res) => {
 /**
  * Get a list of all user's apiEndpoint
  */
-router.get('/list/apiEndPoints', async (req, res) => {
-  const users = [];
-  function forEachEvent (event) {
+router.get('/list/apiEndPoints', async (req: Request, res: Response) => {
+  const users: unknown[] = [];
+  function forEachEvent (event: unknown): void {
     users.push(event);
   }
   await user.getAllUsersApiEndpoints(forEachEvent);
   res.json({ users });
 });
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const assert = require('node:assert/strict');
-const { init: initTestServer } = require('./helpers/testServer');
-const plugins = require('../src/lib/plugins');
+import assert from 'node:assert/strict';
+import { init as initTestServer } from './helpers/testServer.ts';
+import * as plugins from '../src/lib/plugins.ts';
 
 describe('[PLGX] Plugins', () => {
   before(async () => {
@@ -10,8 +10,8 @@ describe('[PLGX] Plugins', () => {
   it('[PLGP] Unit: get list of streams to create', async () => {
     // only test sample plugin
     const { streams, permissions } = plugins.requiredPermissionsAndStreams();
-    const permissionsSample = permissions.filter(p => p.streamId === 'body-weight');
-    const streamsSample = streams.filter(s => s.id === 'body-weight' || s.id === 'body');
+    const permissionsSample = permissions.filter((p: Record<string, unknown>) => p.streamId === 'body-weight');
+    const streamsSample = streams.filter((s: Record<string, unknown>) => s.id === 'body-weight' || s.id === 'body');
     assert.deepEqual({ permissionsSample, streamsSample }, {
       permissionsSample: [
         {

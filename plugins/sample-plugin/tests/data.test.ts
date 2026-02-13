@@ -1,14 +1,16 @@
-const { getConfig } = require('boiler');
-const { init: initTestServer, apiTest, partnerAuth, createOnboardedUser } = require('../../../tests/helpers/testServer');
-const assert = require('node:assert/strict');
+import boiler from 'boiler';
+import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from '../../../tests/helpers/testServer.ts';
+import assert from 'node:assert/strict';
+
+const { getConfig } = boiler;
 
 describe('[PLTX] Plugin sample test', () => {
-  let mainStreamId = null;
+  let mainStreamId: string | null = null;
   before(async () => {
     await initTestServer();
     // get the main streamId for the userPermissionRequest servic
     const config = await getConfig();
-    const firsStream = config.get('service:userPermissionRequest')[0];
+    const firsStream = (config.get('service:userPermissionRequest') as any[])[0];
     mainStreamId = firsStream.streamId;
   });
 
