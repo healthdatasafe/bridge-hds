@@ -330,7 +330,7 @@ For production read: [./INSTALL.md](./INSTALL.md)
 Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig.yml`
 
 for the setting: `bridgeApiEndPoint`; if you don't know it or don't yet have a "managing account" dedicated to the bridge. You may use the following command to create it or retrieve the apiEndpoint: 
-`node tools/createBridgeAccountUser.js --config ./localConfig.js`
+`node tools/createBridgeAccountUser.js --config ./localConfig.yml`
 The token, must have access with 'manage' access rights to the corresponding to the setting `service:bridgeAccountMainStreamId`.
 
 

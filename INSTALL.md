@@ -24,8 +24,11 @@ server {
 
 
 - Then create the ssl certficates with: `certbot --nginx`
-- ⚠️: check if ``systemctl list-timers`  which list certbot really works otherwise put it in crontab
+- ⚠️: check if `systemctl list-timers`  which list certbot really works otherwise put it in crontab
 
+## Create a "managing" user 
+
+Check README procedure
 
 ## Install Bridge
 
