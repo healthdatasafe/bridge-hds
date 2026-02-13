@@ -2,13 +2,12 @@
  * When testing the test suite starts ;)
  * Do not go in infinite loop!
  */
-require('./helpers/testServer');
-const assert = require('node:assert/strict');
-const { init: initTestServer } = require('./helpers/testServer');
-const { startHttpServerCapture } = require('./helpers/testWebServerCapture');
+import assert from 'node:assert/strict';
+import { init as initTestServer } from './helpers/testServer.ts';
+import { startHttpServerCapture } from './helpers/testWebServerCapture.ts';
 
 describe('[TESX] Testing mockup server for webhooks', () => {
-  let webServerCapture;
+  let webServerCapture: Awaited<ReturnType<typeof startHttpServerCapture>>;
   const port = 8365;
   before(async () => {
     await initTestServer();
@@ -35,10 +34,10 @@ describe('[TESX] Testing mockup server for webhooks', () => {
     const result = await fetch(`http://127.0.0.1:${port}${url}`, fetchParams);
     const resultBody = await result.text();
     const captured = webServerCapture.captured.pop();
-    assert.equal(captured.method, fetchParams.method);
-    assert.equal(captured.url, url);
-    assert.equal(captured.headers.hello, fetchParams.headers.hello);
-    assert.equal(captured.body, fetchParams.body);
+    assert.equal(captured!.method, fetchParams.method);
+    assert.equal(captured!.url, url);
+    assert.equal(captured!.headers.hello, fetchParams.headers.hello);
+    assert.equal(captured!.body, fetchParams.body);
     assert.equal(resultBody, responseNextCall.body);
     assert.equal(result.status, responseNextCall.code);
     assert.equal(result.headers.get('hello'), responseNextCall.headers.hello);

@@ -1,41 +1,38 @@
 /**
  * Manage the bridge connection and interaction
  */
-const { getConfig } = require('boiler');
-const { Connection } = require('hds-lib').pryv;
-const { internalError, serviceError } = require('../errors');
-const { getLogger } = require('boiler');
-const logger = getLogger('bridgeAccount');
+import boiler from 'boiler';
+import { pryv } from 'hds-lib';
+import { internalError, serviceError } from '../errors/index.ts';
 
-/** @type {Connection} - the connection to pryv bridge account */
-let _bridgeConnection;
+const { getConfig, getLogger } = boiler;
+let _logger: ReturnType<typeof getLogger> | null = null;
+function logger () { return _logger || (_logger = getLogger('bridgeAccount')); }
+
+const { Connection } = pryv;
+
+/** the connection to pryv bridge account */
+let _bridgeConnection: InstanceType<typeof Connection> | null = null;
 
 /** Will prefix all users' streamsId  */
 const PARENT_USER_STREAM_SUFFIX = '-users';
 
-const settings = {
+const settings: {
+  mainStreamId: string | null;
+  userParentStreamId: string | null;
+  activeUsersStreamId: string | null;
+  errorStreamId: string | null;
+} = {
   mainStreamId: null,
   userParentStreamId: null,
   activeUsersStreamId: null,
   errorStreamId: null
 };
 
-module.exports = {
-  init,
-  bridgeConnection,
-  streamIdForUserId,
-  getUserParentStreamId,
-  getActiveUserStreamId,
-  logErrorOnBridgeAccount,
-  getErrorsOnBridgeAccount,
-  logSyncStatus
-};
-
 /**
  * get the active bridge connection
- * @returns {Connection}
  */
-function bridgeConnection () {
+function bridgeConnection (): InstanceType<typeof Connection> {
   if (!_bridgeConnection) throw new Error('Init bridgeAccount first');
   return _bridgeConnection;
 }
@@ -43,10 +40,10 @@ function bridgeConnection () {
 /**
  * Init the bridgeAccount
  */
-async function init () {
+async function init (): Promise<void> {
   if (_bridgeConnection) return;
   const config = await getConfig();
-  const bridgeApiEndPoint = config.get('bridgeApiEndPoint');
+  const bridgeApiEndPoint = config.get<string>('bridgeApiEndPoint');
   _bridgeConnection = new Connection(bridgeApiEndPoint);
   // check that access is valid
   const info = await _bridgeConnection.accessInfo();
@@ -55,7 +52,7 @@ async function init () {
   ) {
     internalError(`Bridge does not have "manage" permissions on stream ${settings.mainStreamId}`, info);
   }
-  settings.mainStreamId = config.get('service:bridgeAccountMainStreamId');
+  settings.mainStreamId = config.get<string>('service:bridgeAccountMainStreamId');
   settings.userParentStreamId = settings.mainStreamId + PARENT_USER_STREAM_SUFFIX;
   settings.activeUsersStreamId = settings.userParentStreamId + '-active';
   settings.errorStreamId = settings.mainStreamId + '-errors';
@@ -63,23 +60,23 @@ async function init () {
 }
 
 /**
- * Util to get the streamId of a partnerUserId
+ * Util to get the streamId of active users
  */
-function getActiveUserStreamId () {
-  return settings.activeUsersStreamId;
+function getActiveUserStreamId (): string {
+  return settings.activeUsersStreamId!;
+}
+
+/**
+ * Util to get the user parent streamId
+ */
+function getUserParentStreamId (): string {
+  return settings.userParentStreamId!;
 }
 
 /**
  * Util to get the streamId of a partnerUserId
  */
-function getUserParentStreamId () {
-  return settings.userParentStreamId;
-}
-
-/**
- * Util to get the streamId of a partnerUserId
- */
-function streamIdForUserId (partnerUserId) {
+function streamIdForUserId (partnerUserId: string): string {
   // if partnerUserId is not streamId compliant .. make it lowercase and alpha only.
   return settings.userParentStreamId + '-' + partnerUserId;
 }
@@ -87,7 +84,7 @@ function streamIdForUserId (partnerUserId) {
 /**
  * Ensure base structure is created
  */
-async function ensureBaseStreams () {
+async function ensureBaseStreams (): Promise<void> {
   const apiCalls = [{
     method: 'streams.create',
     params: { parentId: settings.mainStreamId, id: settings.userParentStreamId, name: 'Bridge Users' }
@@ -98,8 +95,8 @@ async function ensureBaseStreams () {
     method: 'streams.create',
     params: { parentId: settings.mainStreamId, id: settings.errorStreamId, name: 'Bridge Errors' }
   }];
-  const res = await _bridgeConnection.api(apiCalls);
-  const unexpectedErrors = res.filter(r => r.error && r.error.id !== 'item-already-exists');
+  const res: any = await _bridgeConnection!.api(apiCalls as any);
+  const unexpectedErrors = res.filter((r: any) => r.error && r.error.id !== 'item-already-exists');
   if (unexpectedErrors.length > 0) {
     serviceError('Failed creating base streams', unexpectedErrors);
   }
@@ -107,11 +104,8 @@ async function ensureBaseStreams () {
 
 /**
  * Log error to the bridge account
- * @param {string} message
- * @param {Object} errorObject
- * @returns {Promise<Event|ResponseContent>}
  */
-async function logErrorOnBridgeAccount (message, errorObject = {}) {
+async function logErrorOnBridgeAccount (message: string, errorObject: unknown = {}): Promise<unknown> {
   const params = {
     type: 'error/message-object',
     streamIds: [settings.errorStreamId],
@@ -125,13 +119,10 @@ async function logErrorOnBridgeAccount (message, errorObject = {}) {
 
 /**
  * Log a successfull synchronization
- * @param partnerUserId {string}
- * @param [time] {number} - EPOCH the time of the synchonization (if null now)
- * @param [content] {Object} - a meaningfull object for the plugin sync status
  */
-async function logSyncStatus (partnerUserId, time = null, content = null) {
+async function logSyncStatus (partnerUserId: string, time: number | null = null, content: unknown = null): Promise<unknown> {
   const userStreamId = streamIdForUserId(partnerUserId);
-  const params = {
+  const params: Record<string, unknown> = {
     type: 'sync-status/bridge',
     streamIds: [userStreamId],
     content
@@ -142,18 +133,16 @@ async function logSyncStatus (partnerUserId, time = null, content = null) {
 
 /**
  * Retreive errors on the bridge account
- * @param {Object} parameters @see https://pryv.github.io/reference/#get-events
- * @returns {Promise<Array<Event>|ResponseContent>}
  */
-async function getErrorsOnBridgeAccount (parameters = {}) {
+async function getErrorsOnBridgeAccount (parameters: Record<string, unknown> = {}): Promise<unknown> {
   const params = Object.assign({
     streams: [settings.errorStreamId],
     types: ['error/message-object']
   }, parameters);
-  const res = await _bridgeConnection.api([{
+  const res: any = await _bridgeConnection!.api([{
     method: 'events.get',
     params
-  }]);
+  }] as any);
   if (res.error || !res[0]?.events) {
     return res;
   }
@@ -163,20 +152,31 @@ async function getErrorsOnBridgeAccount (parameters = {}) {
 /**
  * Helper - create a single event, returns it's content of an error
  */
-async function createSingleEvent (params, messageOnError = 'creating event') {
+async function createSingleEvent (params: Record<string, unknown>, messageOnError = 'creating event'): Promise<unknown> {
   const apiCalls = [{
     method: 'events.create',
     params
   }];
   try {
-    const res = await _bridgeConnection.api(apiCalls);
+    const res: any = await _bridgeConnection!.api(apiCalls as any);
     if (res[0].error || !res[0].event) {
-      logger.error(`Failed ${messageOnError} on bridge account result:`, res);
+      logger().error(`Failed ${messageOnError} on bridge account result:`, res);
       return res;
     }
     return res[0]?.event;
   } catch (e) {
-    logger.error(`Failed  ${messageOnError} on bridge account error:`, e);
+    logger().error(`Failed  ${messageOnError} on bridge account error:`, e);
     return e;
   }
 }
+
+export {
+  init,
+  bridgeConnection,
+  streamIdForUserId,
+  getUserParentStreamId,
+  getActiveUserStreamId,
+  logErrorOnBridgeAccount,
+  getErrorsOnBridgeAccount,
+  logSyncStatus
+};

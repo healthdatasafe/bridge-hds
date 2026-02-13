@@ -1,43 +1,33 @@
+import type PluginBridge from '../../../../src/lib/PluginBridge.ts';
+
 /**
  * singleton of plugin
- * @type {PluginSample}
  */
-let plugin;
+let plugin: PluginBridge;
 
 const pluginVersion = 0;
 
-const streamIds = {
+const streamIds: { mainUserStreamId: string | null } = {
   mainUserStreamId: null // this is the stream id on userAccount used to store the data
-};
-
-module.exports = {
-  init,
-  newData
 };
 
 /**
  * You may need an init function to load information from the config
  * or others asynchronous tasks
- * @param {PluginSample}
- * @returns {Promise<void>}
  */
-async function init (p) {
+async function init (p: PluginBridge): Promise<void> {
   plugin = p;
   // For this example the first stream of the userPermissionRequest service
   // is the one used to store the data
-  const firsStream = plugin.configGet('service:userPermissionRequest')[0];
+  const firsStream = (plugin.configGet('service:userPermissionRequest') as any[])[0];
   streamIds.mainUserStreamId = firsStream.streamId;
 }
 
 /**
  * Retreive the user, thransform data to events and create them
  * For this example we only add the streamId and the method "events.create"
- * @param {string} partnerUserId
- * @param {Array<Object>} data Array of "Events like" data without streamId
- * @returns {Object} - result of the api call
- * @throws {Error} - if the user is not found, not active or the api call fails
  */
-async function newData (partnerUserId, data) {
+async function newData (partnerUserId: string, data: Array<{ type: string; content: unknown }>) {
   // will throw error if the user is not found or not active
   const hdsUser = await plugin.getPryvUserConnectionAndStatus(partnerUserId);
   const apiCalls = [];
@@ -60,3 +50,5 @@ async function newData (partnerUserId, data) {
   process.nextTick(() => { plugin.logSyncStatus(partnerUserId, syncTime, { createdEventId, pluginVersion }); });
   return result;
 }
+
+export { init, newData };

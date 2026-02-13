@@ -1,35 +1,22 @@
-const { getConfig, getLogger } = require('boiler');
-const { HDSService, initHDSModel } = require('hds-lib');
+import boiler from 'boiler';
+import { HDSService, initHDSModel } from 'hds-lib';
+import ShortUniqueId from 'short-unique-id';
+import { internalError } from '../errors/index.ts';
 
-const ShortUniqueId = require('short-unique-id');
-const { internalError } = require('../errors');
+const { getConfig, getLogger } = boiler;
+let _logger: ReturnType<typeof getLogger> | null = null;
+function logger () { return _logger || (_logger = getLogger('pryvService')); }
+
 const passwordGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 12 });
 
-const logger = getLogger('pryvService');
-
-module.exports = {
-  init,
-  userExists,
-  createuser,
-  service
-};
-
-/**
- * @type {HDSService}
- */
-let serviceSingleton;
-
-/**
- * @type {ServiceInfo}
- */
-let infosSingleton;
-let config;
+let serviceSingleton: InstanceType<typeof HDSService> | null = null;
+let infosSingleton: any = null;
+let config: any = null;
 
 /**
  * Get current HDSService service
- * @returns {HDSService}
  */
-function service () {
+function service (): InstanceType<typeof HDSService> {
   if (serviceSingleton == null) throw new Error('Init pryvService first');
   return serviceSingleton;
 }
@@ -37,9 +24,8 @@ function service () {
 /**
  * Initialize Pryv service from config and creates a singleton
  * accessible via service()
- * @returns {HDSService}
  */
-async function init () {
+async function init (): Promise<unknown> {
   if (infosSingleton) return infosSingleton;
   config = (await getConfig()).get('service');
   if (!config.appId) throw new Error('Cannot find appId in config');
@@ -48,27 +34,22 @@ async function init () {
     infosSingleton = await serviceSingleton.info();
     await initHDSModel();
     return infosSingleton;
-  } catch (err) {
+  } catch (err: any) {
     internalError('Failed connecting to service instance ' + err.message, config);
   }
   return null;
 }
 
-/**
- * @typedef {Object} CreateUserResult
- * @property {string} apiEndpoint - a personal ApiEnpoint
- * @property {string} username - The username
- * @property {string} password - The password
- */
+interface CreateUserResult {
+  apiEndpoint: string;
+  username: string;
+  password: string;
+}
 
 /**
  * Create a user on Pryv.io
- * @param {string} userId - desireg UserId for Prvy.io
- * @param {string} password
- * @param {string} email
- * @returns {CreateUserResult}
  */
-async function createuser (username, password, email) {
+async function createuser (username: string | null, password: string | null, email: string | null): Promise<CreateUserResult> {
   const host = await getHost();
   password = password || passwordGenerator.rnd();
   username = username || getNewUserId('u');
@@ -90,36 +71,33 @@ async function createuser (username, password, email) {
         referer: 'none'
       })
     });
-    const resBody = await res.json();
+    const resBody = await res.json() as any;
     if (resBody.apiEndpoint == null) throw new Error('Cannot find apiEndpoint in response');
     return { apiEndpoint: resBody.apiEndpoint, username: resBody.username, password };
-  } catch (e) {
-    logger.error('Failed creating user ', e.message);
+  } catch (e: any) {
+    logger().error('Failed creating user ', e.message);
     throw new Error('Failed creating user ' + host + 'users');
   }
 }
 
 /**
  * Utility to check if a user exists on a Pryv pltafom
- * @param {string} userId
- * @returns {boolean}
  */
-async function userExists (userId) {
-  const userExists = await (await fetch(infosSingleton.register + userId + '/check_username')).json();
-  if (typeof userExists.reserved === 'undefined') throw Error('Pryv invalid user exists response ' + JSON.stringify(userExists));
-  return userExists.reserved;
+async function userExists (userId: string): Promise<boolean> {
+  const userExistsRes = await (await fetch(infosSingleton.register + userId + '/check_username')).json() as any;
+  if (typeof userExistsRes.reserved === 'undefined') throw Error('Pryv invalid user exists response ' + JSON.stringify(userExistsRes));
+  return userExistsRes.reserved;
 }
 
 /**
  * Not really usefull for Open-Pryv.io kept if entreprise version becoms availble
- * @returns {string} first available hosting
  */
-async function getHost () {
+async function getHost (): Promise<string> {
   // get available hosting
-  const hostings = await (await fetch(infosSingleton.register + 'hostings')).json();
-  let hostingCandidate = null;
+  const hostings = await (await fetch(infosSingleton.register + 'hostings')).json() as any;
+  let hostingCandidate: any = null;
   findOneHostingKey(hostings, 'N');
-  function findOneHostingKey (o, parentKey) {
+  function findOneHostingKey (o: any, parentKey: string): void {
     for (const key of Object.keys(o)) {
       if (parentKey === 'hostings') {
         const hosting = o[key];
@@ -138,7 +116,9 @@ async function getHost () {
 }
 
 const userIdGenerator = new ShortUniqueId({ dictionary: 'alphanum_lower', length: 7 });
-function getNewUserId (startWith = 'x') {
+function getNewUserId (startWith = 'x'): string {
   const id = startWith + userIdGenerator.rnd();
   return id;
 }
+
+export { init, userExists, createuser, service };

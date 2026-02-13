@@ -1,24 +1,25 @@
-const { getConfig, getLogger } = require('./initBoiler')(`bridge:${process.pid}`);
+import initBoiler from './initBoiler.ts';
+import cluster from 'cluster';
+import os from 'os';
+import * as server from './server.ts';
 
-const cluster = require('cluster');
-const os = require('os');
-const server = require('./server');
+const { getConfig, getLogger } = initBoiler(`bridge:${process.pid}`);
+
 const numCPUs = os.cpus().length;
-
 const logger = getLogger('start');
 
 (async () => {
   const config = await getConfig();
-  if (cluster.isMaster) {
+  if (cluster.isPrimary) {
     logger.info(`Master process ${process.pid} is running`);
-    const configNumProcesses = config.get('start:numProcesses') || numCPUs;
+    const configNumProcesses = config.get<number>('start:numProcesses') || numCPUs;
     const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;
 
     for (let i = 0; i < numProcesses; i++) {
       cluster.fork();
     }
 
-    cluster.on('exit', (worker, code, signal) => {
+    cluster.on('exit', (worker) => {
       logger.info(`Worker process ${worker.process.pid} died. Restarting...`);
       cluster.fork();
     });

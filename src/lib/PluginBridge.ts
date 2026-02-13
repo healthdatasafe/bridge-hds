@@ -1,43 +1,46 @@
-const { getLogger, getConfig } = require('boiler');
-const errors = require('../errors');
-const user = require('../methods/user');
-const { logSyncStatus } = require('./bridgeAccount');
+import boiler from 'boiler';
+import type { Config, Logger } from 'boiler';
+import type { Application } from 'express';
+import * as errors from '../errors/index.ts';
+import * as user from '../methods/user.ts';
+import { logSyncStatus } from './bridgeAccount.ts';
+
+const { getLogger, getConfig } = boiler;
 
 /**
  * Utility to be extended by all plugins.
  * The main task is to centralize internals so the structure of
  * bridge-hds can be modified without affecting plugins.
  */
-class PluginBridge {
+export default class PluginBridge {
   /**
    * Logger, you can call .info(..) .error(...) and .debug(..)
    */
-  logger;
+  logger: Logger;
 
   /**
    * set of errors, most usefull are
    * assertFromPartner, unkownRessource, unauthorized, badRequest, internalError
    */
-  errors;
+  errors: typeof errors;
 
   /**
    * returns the data items this plugin is going to create
    * From this permissions will be adjusted
-   * @property {Array<string>} - array of itemKeys
    */
-  get potentialCreatedItemKeys () {
+  get potentialCreatedItemKeys (): string[] {
     return [];
   }
 
   /**
    * private instance of config
    */
-  #config;
+  #config: Config | null = null;
 
   /**
    * private instance of bridgeConnectionGetter (form lib/bridgeAccount)
    */
-  #bridgeConnectionGetter;
+  #bridgeConnectionGetter: (() => unknown) | null = null;
 
   constructor () {
     this.logger = getLogger('plugin:' + this.key);
@@ -45,26 +48,24 @@ class PluginBridge {
   }
 
   /**
-   * @property {string} - a key unique for your plugin
+   * a key unique for your plugin
    */
-  get key () {
+  get key (): string {
     throw new Error('Must be implemented');
   }
 
   /**
-   * @property {pryv.Connection} - connection to bridge managing account
+   * connection to bridge managing account
    */
-  get bridgeConnection () {
-    return this.#bridgeConnectionGetter();
+  get bridgeConnection (): unknown {
+    return this.#bridgeConnectionGetter!();
   }
 
   /**
-  * Must be exposed, called once at boot.
-  * Use this to declare your routes.
-  * @param {Express.Application} app
-  * @param {Function} bridgeConnectionGetter - to get the current pryv.Connection
-  */
-  async init (app, bridgeConnectionGetter) {
+   * Must be exposed, called once at boot.
+   * Use this to declare your routes.
+   */
+  async init (app: Application, bridgeConnectionGetter: () => unknown): Promise<void> {
     if (!app) throw new Error('Missing "app" param');
     if (!bridgeConnectionGetter) throw new Error('Missing "bridgeConnectionGetter" param');
     this.#config = await getConfig();
@@ -77,11 +78,8 @@ class PluginBridge {
   /**
    * Called each time a new user user is associated.
    * You may use this to create base streams for you app
-   * @param {string} partnerUserId
-   * @param {string} apiEndPoint
-   * @returns {Object} - serializable in JSON the result will be returned with the SUCCESS webhook
    */
-  async newUserAssociated (partnerUserId, apiEndPoint) {
+  async newUserAssociated (partnerUserId: string, apiEndPoint: string): Promise<unknown> {
     throw new Error('Must be implemented');
     // returns something
   }
@@ -90,38 +88,29 @@ class PluginBridge {
 
   /**
    * Retreive configuration item
-   * @param {string} key - path seprated by ":"
    */
-  configGet (key) {
-    return this.#config.get(key);
+  configGet (key: string): any {
+    return this.#config!.get(key);
   }
 
   /**
    * Throws Unothorized if call is not comming from partner
-   * @param {Express.Request} req
    */
-  assertFromPartner (req) {
-    errors.assertFromPartner(req);
+  assertFromPartner (req: unknown): void {
+    errors.assertFromPartner(req as any);
   }
 
   /**
    * From a partenerUserId get a pryvConnection and user status
-   * @param {String} partnerUserId
-   * @returns {StatusAndPryvConnection}
    */
-  async getPryvUserConnectionAndStatus (partnerUserId) {
+  async getPryvUserConnectionAndStatus (partnerUserId: string): Promise<any> {
     return user.getPryvConnectionAndStatus(partnerUserId);
   }
 
   /**
    * Log a successfull synchronization
-   * @param partnerUserId {string}
-   * @param [time] {number} - EPOCH the time of the synchonization (if null now)
-   * @param [content] {Object} - a meaningfull object for the plugin sync status
    */
-  async logSyncStatus (partnerUserId, time, content) {
+  async logSyncStatus (partnerUserId: string, time: number | null, content: unknown): Promise<unknown> {
     return logSyncStatus(partnerUserId, time, content);
   }
 }
-
-module.exports = PluginBridge;
