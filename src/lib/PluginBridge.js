@@ -1,7 +1,7 @@
-const { getLogger, getConfig } = require('boiler')
-const errors = require('../errors')
-const user = require('../methods/user')
-const { logSyncStatus } = require('./bridgeAccount')
+const { getLogger, getConfig } = require('boiler');
+const errors = require('../errors');
+const user = require('../methods/user');
+const { logSyncStatus } = require('./bridgeAccount');
 
 /**
  * Utility to be extended by all plugins.
@@ -12,13 +12,13 @@ class PluginBridge {
   /**
    * Logger, you can call .info(..) .error(...) and .debug(..)
    */
-  logger
+  logger;
 
   /**
    * set of errors, most usefull are
    * assertFromPartner, unkownRessource, unauthorized, badRequest, internalError
    */
-  errors
+  errors;
 
   /**
    * returns the data items this plugin is going to create
@@ -26,36 +26,36 @@ class PluginBridge {
    * @property {Array<string>} - array of itemKeys
    */
   get potentialCreatedItemKeys () {
-    return []
+    return [];
   }
 
   /**
    * private instance of config
    */
-  #config
+  #config;
 
   /**
    * private instance of bridgeConnectionGetter (form lib/bridgeAccount)
    */
-  #bridgeConnectionGetter
+  #bridgeConnectionGetter;
 
   constructor () {
-    this.logger = getLogger('plugin:' + this.key)
-    this.errors = errors
+    this.logger = getLogger('plugin:' + this.key);
+    this.errors = errors;
   }
 
   /**
    * @property {string} - a key unique for your plugin
    */
   get key () {
-    throw new Error('Must be implemented')
+    throw new Error('Must be implemented');
   }
 
   /**
    * @property {pryv.Connection} - connection to bridge managing account
    */
   get bridgeConnection () {
-    return this.#bridgeConnectionGetter()
+    return this.#bridgeConnectionGetter();
   }
 
   /**
@@ -65,10 +65,10 @@ class PluginBridge {
   * @param {Function} bridgeConnectionGetter - to get the current pryv.Connection
   */
   async init (app, bridgeConnectionGetter) {
-    if (!app) throw new Error('Missing "app" param')
-    if (!bridgeConnectionGetter) throw new Error('Missing "bridgeConnectionGetter" param')
-    this.#config = await getConfig()
-    this.#bridgeConnectionGetter = bridgeConnectionGetter
+    if (!app) throw new Error('Missing "app" param');
+    if (!bridgeConnectionGetter) throw new Error('Missing "bridgeConnectionGetter" param');
+    this.#config = await getConfig();
+    this.#bridgeConnectionGetter = bridgeConnectionGetter;
     // perform async initaliazion tasks here
     // load your routes
     // when overriden call init.super()
@@ -82,7 +82,7 @@ class PluginBridge {
    * @returns {Object} - serializable in JSON the result will be returned with the SUCCESS webhook
    */
   async newUserAssociated (partnerUserId, apiEndPoint) {
-    throw new Error('Must be implemented')
+    throw new Error('Must be implemented');
     // returns something
   }
 
@@ -93,7 +93,7 @@ class PluginBridge {
    * @param {string} key - path seprated by ":"
    */
   configGet (key) {
-    return this.#config.get(key)
+    return this.#config.get(key);
   }
 
   /**
@@ -101,7 +101,7 @@ class PluginBridge {
    * @param {Express.Request} req
    */
   assertFromPartner (req) {
-    errors.assertFromPartner(req)
+    errors.assertFromPartner(req);
   }
 
   /**
@@ -110,7 +110,7 @@ class PluginBridge {
    * @returns {StatusAndPryvConnection}
    */
   async getPryvUserConnectionAndStatus (partnerUserId) {
-    return user.getPryvConnectionAndStatus(partnerUserId)
+    return user.getPryvConnectionAndStatus(partnerUserId);
   }
 
   /**
@@ -120,8 +120,8 @@ class PluginBridge {
    * @param [content] {Object} - a meaningfull object for the plugin sync status
    */
   async logSyncStatus (partnerUserId, time, content) {
-    return logSyncStatus(partnerUserId, time, content)
+    return logSyncStatus(partnerUserId, time, content);
   }
 }
 
-module.exports = PluginBridge
+module.exports = PluginBridge;

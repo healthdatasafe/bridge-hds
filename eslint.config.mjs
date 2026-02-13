@@ -1,7 +1,7 @@
-import neostandard from 'neostandard'
+import neostandard from 'neostandard';
 
 export default [
-  ...neostandard(),
+  ...neostandard({ semi: true }),
   {
     ignores: ['build/test/*', 'node_modules/*']
   },
@@ -18,4 +18,4 @@ export default [
       }
     }
   }
-]
+];
