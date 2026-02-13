@@ -1,14 +1,14 @@
-const { getConfig, getLogger } = require('boiler');
-const { bridgeConnection, streamIdForUserId, getUserParentStreamId, logErrorOnBridgeAccount } = require('../lib/bridgeAccount');
-const pryvService = require('../lib/pryvService');
-const { internalError, badRequest, serviceError } = require('../errors');
-const user = require('./user.js');
+const { getConfig, getLogger } = require('boiler')
+const { bridgeConnection, streamIdForUserId, getUserParentStreamId, logErrorOnBridgeAccount } = require('../lib/bridgeAccount')
+const pryvService = require('../lib/pryvService')
+const { internalError, badRequest, serviceError } = require('../errors')
+const user = require('./user.js')
 
-const ShortUniqueId = require('short-unique-id');
-const { advertiseNewUserToPlugins, requiredPermissionsAndStreams } = require('../lib/plugins.js');
-const onboardingSecretGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 24 });
+const ShortUniqueId = require('short-unique-id')
+const { advertiseNewUserToPlugins, requiredPermissionsAndStreams } = require('../lib/plugins.js')
+const onboardingSecretGenerator = new ShortUniqueId({ dictionary: 'alphanum', length: 24 })
 
-const logger = getLogger('onboard');
+const logger = getLogger('onboard')
 
 module.exports = {
   init,
@@ -16,7 +16,7 @@ module.exports = {
   finalize,
   authStatusesGet,
   authStatusesClean
-};
+}
 
 /**
  * Will be set by init with values from the config and service
@@ -28,23 +28,23 @@ const settings = {
   returnURL: null,
   consentMessage: null,
   partnerURLs: null
-};
+}
 // from Pryv service
 async function init () {
-  const config = await getConfig();
-  settings.requestingAppId = config.get('service:appId');
-  settings.consentMessage = config.get('service:consentMessage');
-  settings.returnURL = config.get('baseURL') + '/user/onboard/finalize/';
+  const config = await getConfig()
+  settings.requestingAppId = config.get('service:appId')
+  settings.consentMessage = config.get('service:consentMessage')
+  settings.returnURL = config.get('baseURL') + '/user/onboard/finalize/'
 
-  settings.apiAccessURL = (await pryvService.service().info()).access;
-  settings.partnerURLs = config.get('partnerURLs');
+  settings.apiAccessURL = (await pryvService.service().info()).access
+  settings.partnerURLs = config.get('partnerURLs')
 
   // add permissions and streams from plugins
-  const permissionsFromSettings = config.get('service:userPermissionRequest');
-  validatePermissions(permissionsFromSettings);
-  const { permissions, streams } = requiredPermissionsAndStreams(permissionsFromSettings);
-  settings.requestedPermissions = permissions;
-  settings.ensureBaseStreams = streams;
+  const permissionsFromSettings = config.get('service:userPermissionRequest')
+  validatePermissions(permissionsFromSettings)
+  const { permissions, streams } = requiredPermissionsAndStreams(permissionsFromSettings)
+  settings.requestedPermissions = permissions
+  settings.ensureBaseStreams = streams
 }
 
 /**
@@ -55,12 +55,12 @@ async function init () {
 async function initiate (partnerUserId, redirectURLs, webhookClientData) {
   // check if user is active
 
-  const userStatus = await user.status(partnerUserId, false);
+  const userStatus = await user.status(partnerUserId, false)
   if (userStatus !== null) {
     return {
       type: 'userExists',
       user: userStatus.user
-    };
+    }
   }
   // user found
 
@@ -78,7 +78,7 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
               content: settings.consentMessage
             }
       }
-  };
+  }
   const response = await fetch(settings.apiAccessURL, {
     method: 'POST',
     headers: {
@@ -86,23 +86,23 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(authRequestBody)
-  });
-  const responseBody = await response.json();
+  })
+  const responseBody = await response.json()
 
-  const onboardingSecret = onboardingSecretGenerator.randomUUID();
+  const onboardingSecret = onboardingSecretGenerator.randomUUID()
 
   // -- store request intent
-  const initiateResult = { redirectURLs, webhookClientData, responseBody, onboardingSecret };
-  await authStatusStore(partnerUserId, initiateResult);
+  const initiateResult = { redirectURLs, webhookClientData, responseBody, onboardingSecret }
+  await authStatusStore(partnerUserId, initiateResult)
 
   const result = {
     type: 'authRequest',
     onboardingSecret,
     redirectUserURL: responseBody.url,
     context: initiateResult
-  };
+  }
 
-  return result;
+  return result
 }
 
 /**
@@ -113,7 +113,7 @@ async function initiate (partnerUserId, redirectURLs, webhookClientData) {
  */
 async function finalize (partnerUserId, pollParam) {
   try {
-    return await finalizeToBeCatched(partnerUserId, pollParam);
+    return await finalizeToBeCatched(partnerUserId, pollParam)
   } catch (e) {
     if (!e.skipWebHookCall) {
       const webhookParams = Object.assign(
@@ -122,20 +122,20 @@ async function finalize (partnerUserId, pollParam) {
           partnerUserId,
           error: e.message,
           errorObjectJSON: JSON.stringify(e.errorObject)
-        }, e.webhookParams || { });
+        }, e.webhookParams || { })
       // call webhook
-      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
-      logger.error(e);
+      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams)
+      logger.error(e)
     }
     const errorObject = {
       partnerUserId,
       pollParam,
       innerErrorMessage: e.message,
       innerErrorObject: e.errorObject || null
-    };
-    logErrorOnBridgeAccount('Failed finalizing onboarding', errorObject);
+    }
+    logErrorOnBridgeAccount('Failed finalizing onboarding', errorObject)
   }
-  return getErrorRedirectURLWithMessage('Failed finalizing onboarding.');
+  return getErrorRedirectURLWithMessage('Failed finalizing onboarding.')
 }
 
 /**
@@ -146,48 +146,48 @@ async function finalize (partnerUserId, pollParam) {
  */
 async function finalizeToBeCatched (partnerUserId, pollParam) {
   // might be an Array ..
-  const pollURL = Array.isArray(pollParam) ? pollParam[0] : pollParam;
-  if (pollURL == null || !pollURL.startsWith('http')) badRequest('Missing or invalid prYvpoll URL');
-  const pollContent = await (await fetch(pollURL)).json();
+  const pollURL = Array.isArray(pollParam) ? pollParam[0] : pollParam
+  if (pollURL == null || !pollURL.startsWith('http')) badRequest('Missing or invalid prYvpoll URL')
+  const pollContent = await (await fetch(pollURL)).json()
 
   // safety check that onboard process has started
-  const currentAuthStatuses = await authStatusesGet(partnerUserId);
-  const matchingStatuses = currentAuthStatuses.filter(s => s.content.responseBody.poll === pollURL);
+  const currentAuthStatuses = await authStatusesGet(partnerUserId)
+  const matchingStatuses = currentAuthStatuses.filter(s => s.content.responseBody.poll === pollURL)
   if (matchingStatuses.length !== 1) {
-    logger.error('No matching pending request for this user', { partnerUserId, pollParam });
+    logger.error('No matching pending request for this user', { partnerUserId, pollParam })
     // -- redirect to partner error page
-    return getErrorRedirectURLWithMessage('No matching pending request');
+    return getErrorRedirectURLWithMessage('No matching pending request')
   }
-  const matchingStatusContent = matchingStatuses[0].content;
-  const webhookParams = Object.assign({ partnerUserId, onboardingSecret: matchingStatusContent.onboardingSecret }, matchingStatusContent.webhookClientData);
+  const matchingStatusContent = matchingStatuses[0].content
+  const webhookParams = Object.assign({ partnerUserId, onboardingSecret: matchingStatusContent.onboardingSecret }, matchingStatusContent.webhookClientData)
 
   // REMOVE pending request in background
-  process.nextTick(() => { authStatusesClean(currentAuthStatuses); });
+  process.nextTick(() => { authStatusesClean(currentAuthStatuses) })
 
   // ACCEPTED
   try {
     if (pollContent.status === 'ACCEPTED') {
       // -- Add user credentials to partner streams
-      await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint);
+      await user.addCredentialToBridgeAccount(partnerUserId, pollContent.apiEndpoint)
       // -- Advertise plugins of this new user
-      const pluginsResult = await advertiseNewUserToPlugins(partnerUserId, pollContent.apiEndpoint);
-      webhookParams.pluginsResultJSON = JSON.stringify(pluginsResult);
-      webhookParams.type = 'SUCCESS';
+      const pluginsResult = await advertiseNewUserToPlugins(partnerUserId, pollContent.apiEndpoint)
+      webhookParams.pluginsResultJSON = JSON.stringify(pluginsResult)
+      webhookParams.type = 'SUCCESS'
       // call webhook
-      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
-      return matchingStatusContent.redirectURLs.success;
+      await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams)
+      return matchingStatusContent.redirectURLs.success
     }
 
     // CANCELLED
-    webhookParams.type = 'CANCEL';
-    webhookParams.status = pollContent.status;
+    webhookParams.type = 'CANCEL'
+    webhookParams.status = pollContent.status
   } catch (e) {
     // just attach webhookParams to forward the error
-    e.webhookParams = webhookParams;
-    throw e;
+    e.webhookParams = webhookParams
+    throw e
   }
-  await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams);
-  return matchingStatusContent.redirectURLs.cancel;
+  await webhookCall(settings.partnerURLs.webhookOnboard, webhookParams)
+  return matchingStatusContent.redirectURLs.cancel
 }
 
 // ------ onboard steps
@@ -202,18 +202,18 @@ async function finalizeToBeCatched (partnerUserId, pollParam) {
  * @returns {Array} of status
  */
 async function authStatusesGet (partnerUserId) {
-  const userStreamId = streamIdForUserId(partnerUserId);
+  const userStreamId = streamIdForUserId(partnerUserId)
   const apiCalls = [{
     method: 'events.get',
     params: { streams: [userStreamId], types: ['temp-status/bridge-auth-request'] }
-  }];
-  const response = (await bridgeConnection().api(apiCalls))[0];
+  }]
+  const response = (await bridgeConnection().api(apiCalls))[0]
   // -- todo check response
-  return response.events || [];
+  return response.events || []
 }
 
 async function authStatusStore (partnerUserId, payload) {
-  const userStreamId = streamIdForUserId(partnerUserId);
+  const userStreamId = streamIdForUserId(partnerUserId)
   const apiCalls = [{
     method: 'streams.create',
     params: { id: userStreamId, parentId: getUserParentStreamId(), name: partnerUserId }
@@ -224,10 +224,10 @@ async function authStatusStore (partnerUserId, payload) {
       streamIds: [userStreamId],
       content: payload
     }
-  }];
-  const response = await bridgeConnection().api(apiCalls);
-  if (!response[1].event || response[1].error) serviceError('Failed storing auth status', response[1]);
-  return response[1].event;
+  }]
+  const response = await bridgeConnection().api(apiCalls)
+  if (!response[1].event || response[1].error) serviceError('Failed storing auth status', response[1])
+  return response[1].event
 }
 
 /**
@@ -235,16 +235,16 @@ async function authStatusStore (partnerUserId, payload) {
  * @param {Array<Events>} authStatusEvents
  */
 async function authStatusesClean (authStatusEvents) {
-  if (!authStatusEvents || authStatusEvents.length < 1) return;
-  const apiCalls = [];
+  if (!authStatusEvents || authStatusEvents.length < 1) return
+  const apiCalls = []
   for (const e of authStatusEvents) {
-    const deleteCall = { method: 'events.delete', params: { id: e.id } };
-    apiCalls.push(deleteCall, deleteCall); // twice for a real delete
+    const deleteCall = { method: 'events.delete', params: { id: e.id } }
+    apiCalls.push(deleteCall, deleteCall) // twice for a real delete
   }
-  const res = await bridgeConnection().api(apiCalls);
+  const res = await bridgeConnection().api(apiCalls)
   for (const r of res) {
-    if (r.error) logger.error('Failed deleting status event', r);
-    if (r.eventDeletion) logger.info(`Deleted status event id: ${r.eventDeletion.id}`);
+    if (r.error) logger.error('Failed deleting status event', r)
+    if (r.eventDeletion) logger.info(`Deleted status event id: ${r.eventDeletion.id}`)
   }
 }
 
@@ -254,12 +254,12 @@ async function authStatusesClean (authStatusEvents) {
  * Validate if settings for requested permissions is valid
  */
 function validatePermissions (permissions) {
-  if (!Array.isArray(permissions)) internalError('Permissions setting should be an array: ' + JSON.stringify(permissions, null, 2));
-  if (permissions.length === 0) internalError('Permissions setting should have one element ' + JSON.stringify(permissions, null, 2));
+  if (!Array.isArray(permissions)) internalError('Permissions setting should be an array: ' + JSON.stringify(permissions, null, 2))
+  if (permissions.length === 0) internalError('Permissions setting should have one element ' + JSON.stringify(permissions, null, 2))
   for (const p of permissions) {
-    if (p.streamId === '*' && p.level === 'manage' && p.defaultName === undefined) continue;
+    if (p.streamId === '*' && p.level === 'manage' && p.defaultName === undefined) continue
     for (const k of ['streamId', 'level', 'defaultName']) {
-      if (!p[k] || typeof p[k] !== 'string') internalError('Permissions setting is not valid ' + JSON.stringify(p, null, 2));
+      if (!p[k] || typeof p[k] !== 'string') internalError('Permissions setting is not valid ' + JSON.stringify(p, null, 2))
     }
   }
 }
@@ -270,32 +270,32 @@ async function webhookCall (whSettings, params) {
   const fetchParams = {
     method: whSettings.method,
     headers: whSettings.headers
-  };
-  let queryParams = '';
+  }
+  let queryParams = ''
   if (whSettings.method === 'GET') {
-    if (Object.keys(params).length > 0) queryParams = '?' + new URLSearchParams(params);
+    if (Object.keys(params).length > 0) queryParams = '?' + new URLSearchParams(params)
   } else { // assume POST
-    fetchParams.headers['Content-Type'] = 'application/json';
-    fetchParams.body = JSON.stringify(params);
+    fetchParams.headers['Content-Type'] = 'application/json'
+    fetchParams.body = JSON.stringify(params)
   }
   try {
-    await fetch(whSettings.url + queryParams, fetchParams);
+    await fetch(whSettings.url + queryParams, fetchParams)
   } catch (e) {
-    logger.error('Failed contacting partner backend', e);
-    const e2 = new Error('Failed contacting partner backend');
+    logger.error('Failed contacting partner backend', e)
+    const e2 = new Error('Failed contacting partner backend')
     e2.errorObject = {
       webhookCall: {
         whSettings,
         params
       }
-    };
-    e2.skipWebHookCall = true;
-    e2.webhookParams = params;
-    throw e2;
+    }
+    e2.skipWebHookCall = true
+    e2.webhookParams = params
+    throw e2
   }
 }
 
 function getErrorRedirectURLWithMessage (message) {
-  const encodedMessage = encodeURIComponent(message);
-  return settings.partnerURLs.defaultRedirectOnError + '?message=' + encodedMessage;
+  const encodedMessage = encodeURIComponent(message)
+  return settings.partnerURLs.defaultRedirectOnError + '?message=' + encodedMessage
 }

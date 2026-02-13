@@ -1,16 +1,16 @@
-const PluginBridge = require('../../../src/lib/PluginBridge');
+const PluginBridge = require('../../../src/lib/PluginBridge')
 
 // list (in order) async methods to be called.
 const initAsyncComponents = [
   require('./methods/handleData').init
-];
+]
 
 class PluginSample extends PluginBridge {
   /**
    * @property {string} - a key unique for your plugin
    */
   get key () {
-    return 'sample';
+    return 'sample'
   }
 
   /**
@@ -19,7 +19,7 @@ class PluginSample extends PluginBridge {
    * @property {Array<string>} - array of itemKeys
    */
   get potentialCreatedItemKeys () {
-    return ['body-weight'];
+    return ['body-weight']
   }
 
   /**
@@ -29,14 +29,14 @@ class PluginSample extends PluginBridge {
    * @param {Function} bridgeConnectionGetter - to get the current pryv.Connection
    */
   async init (app, bridgeConnectionGetter) {
-    await super.init(app, bridgeConnectionGetter); // keep await super.init();
-    if (process.env.NODE_ENV !== 'test') throw new Error('This plugin is only for test purposes');
+    await super.init(app, bridgeConnectionGetter) // keep await super.init();
+    if (process.env.NODE_ENV !== 'test') throw new Error('This plugin is only for test purposes')
     // initalize singletons & config
-    for (const init of initAsyncComponents) await init(this);
+    for (const init of initAsyncComponents) await init(this)
     // initialize data route with plugin as reference to expose toolkit.
-    const dataRoute = require('./routes/dataRoute')(this);
-    app.use('/data/', dataRoute);
-    this.logger.info('Test plugin loaded');
+    const dataRoute = require('./routes/dataRoute')(this)
+    app.use('/data/', dataRoute)
+    this.logger.info('Test plugin loaded')
   }
 
   /**
@@ -46,8 +46,8 @@ class PluginSample extends PluginBridge {
  */
   async newUserAssociated (partnerUserId, apiEndPoint) {
   // implement your code here
-    return { dummy: 'Acknowledged by sample plugin' };
+    return { dummy: 'Acknowledged by sample plugin' }
   }
 }
 
-module.exports = PluginSample;
+module.exports = PluginSample

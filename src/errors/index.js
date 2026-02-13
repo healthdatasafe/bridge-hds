@@ -1,6 +1,6 @@
-const expressErrorLogger = require('boiler').getLogger('expressError');
+const expressErrorLogger = require('boiler').getLogger('expressError')
 
-const REGEXP_URL = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/;
+const REGEXP_URL = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/
 
 module.exports = {
   expressErrorHandler,
@@ -13,62 +13,62 @@ module.exports = {
   badRequest,
   internalError,
   serviceError
-};
+}
 
 /**
  * Middleware for express to manage errors
  */
 function expressErrorHandler (err, req, res, next) {
-  expressErrorLogger.error(err, err);
+  expressErrorLogger.error(err, err)
   // console.log(err);
   if (res.headersSent) {
-    return next(err);
+    return next(err)
   }
-  const statusCode = err.statusCode || 501;
-  res.status(statusCode);
+  const statusCode = err.statusCode || 501
+  res.status(statusCode)
   if (statusCode === 404) {
-    res.log404 = true; // tells the logger to keep this 404 in the logs.
+    res.log404 = true // tells the logger to keep this 404 in the logs.
   }
-  const errorContent = { error: err.message };
-  if (err.errorObject) errorContent.errorObject = err.errorObject;
-  res.json(errorContent);
+  const errorContent = { error: err.message }
+  if (err.errorObject) errorContent.errorObject = err.errorObject
+  res.json(errorContent)
 }
 
 // ---------------- Errors ------------------ //
 
 function unkownRessource (msg, obj) {
-  const e = new Error('Ressource not found: ' + msg);
-  e.statusCode = 404;
-  if (obj) e.errorObject = obj;
-  throw e;
+  const e = new Error('Ressource not found: ' + msg)
+  e.statusCode = 404
+  if (obj) e.errorObject = obj
+  throw e
 }
 
 function unauthorized (msg, obj) {
-  const e = new Error('Unauthorized: ' + msg);
-  e.statusCode = 401;
-  if (obj) e.errorObject = obj;
-  throw e;
+  const e = new Error('Unauthorized: ' + msg)
+  e.statusCode = 401
+  if (obj) e.errorObject = obj
+  throw e
 }
 
 function badRequest (msg, obj) {
-  const e = new Error('Bad request: ' + msg);
-  e.statusCode = 400;
-  if (obj) e.errorObject = obj;
-  throw e;
+  const e = new Error('Bad request: ' + msg)
+  e.statusCode = 400
+  if (obj) e.errorObject = obj
+  throw e
 }
 
 function internalError (msg, obj) {
-  const e = new Error('Internal Error: ' + msg);
-  e.statusCode = 501;
-  if (obj) e.errorObject = obj;
-  throw e;
+  const e = new Error('Internal Error: ' + msg)
+  e.statusCode = 501
+  if (obj) e.errorObject = obj
+  throw e
 }
 
 function serviceError (msg, obj) {
-  const e = new Error('Service Error: ' + msg);
-  e.statusCode = 501;
-  if (obj) e.errorObject = obj;
-  throw e;
+  const e = new Error('Service Error: ' + msg)
+  e.statusCode = 501
+  if (obj) e.errorObject = obj
+  throw e
 }
 
 // ----------------- Asserts ---------------- //
@@ -80,10 +80,10 @@ function serviceError (msg, obj) {
  * @throws 401 Unathorized
  */
 function assertFromPartner (req) {
-  if (req.isPartner) return;
-  const e = new Error('Unathorized');
-  e.statusCode = 401;
-  throw e;
+  if (req.isPartner) return
+  const e = new Error('Unathorized')
+  e.statusCode = 401
+  throw e
 }
 
 /**
@@ -93,10 +93,10 @@ function assertFromPartner (req) {
  * @throws 400 Invalid URL
  */
 function assertValidURL (url, extraMessage = '') {
-  if (REGEXP_URL.test(url)) return;
-  const e = new Error(`Invalid url "${url}" ${extraMessage}`);
-  e.statusCode = 400;
-  throw e;
+  if (REGEXP_URL.test(url)) return
+  const e = new Error(`Invalid url "${url}" ${extraMessage}`)
+  e.statusCode = 400
+  throw e
 }
 
 /**
@@ -106,10 +106,10 @@ function assertValidURL (url, extraMessage = '') {
  * @throws 400 Invalid partnerId
  */
 function assertValidPartnerUserId (partnerUserId) {
-  if (partnerUserId != null && validateUserPartnerId(partnerUserId)) return;
-  const e = new Error(`Invalid userPartnerId "${partnerUserId}"`);
-  e.statusCode = 400;
-  throw e;
+  if (partnerUserId != null && validateUserPartnerId(partnerUserId)) return
+  const e = new Error(`Invalid userPartnerId "${partnerUserId}"`)
+  e.statusCode = 400
+  throw e
 }
 
 /**
@@ -119,10 +119,10 @@ function assertValidPartnerUserId (partnerUserId) {
  * @throws 400 Invalid email
  */
 function assertValidEmail (email) {
-  if (email != null && validateEmail(email)) return;
-  const e = new Error(`Invalid email "${email}"`);
-  e.statusCode = 400;
-  throw e;
+  if (email != null && validateEmail(email)) return
+  const e = new Error(`Invalid email "${email}"`)
+  e.statusCode = 400
+  throw e
 }
 
 // ----------------  Validators --------------//
@@ -134,7 +134,7 @@ function assertValidEmail (email) {
  * @returns {boolean}
  */
 function validateUserPartnerId (userPartnerId) {
-  return (userPartnerId != null && userPartnerId.length > 3);
+  return (userPartnerId != null && userPartnerId.length > 3)
 }
 
 /**
@@ -148,5 +148,5 @@ const validateEmail = (email) => {
     .toLowerCase()
     .match(
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
-};
+    )
+}
