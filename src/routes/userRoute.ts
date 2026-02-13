@@ -66,7 +66,7 @@ router.post('/:partnerUserId/status', async (req: Request, res: Response) => {
   errors.assertValidPartnerUserId(partnerUserId);
   const active = req.body.active;
   if (active !== true && active !== false) errors.badRequest('active must be true or false');
-  const result = await user.setStatus(partnerUserId);
+  const result = await user.setStatus(partnerUserId, active);
   res.json(result);
 });
 

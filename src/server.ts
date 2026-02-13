@@ -25,7 +25,6 @@ const require = createRequire(import.meta.url);
 const initAsyncComponents = [
   pryvServiceInit,
   bridgeAccountInit,
-  onboardInit,
   checkAuth.init
 ];
 
@@ -42,25 +41,27 @@ async function getApp (): Promise<Application> {
     await init();
   }
 
-  app = express();
+  const newApp = express();
 
-  app.use(cors());
-  app.use(express.json());
+  newApp.use(cors());
+  newApp.use(express.json());
 
   // keep first
-  app.use(loggerMiddleware);
-  app.use(checkAuth.checkIfPartner);
+  newApp.use(loggerMiddleware);
+  newApp.use(checkAuth.checkIfPartner);
 
   // static ressource are temporary until handled by externall apps.
-  app.use('/static', express.static(path.resolve(import.meta.dirname, 'static')));
-  app.use('/account', accountRouter);
-  app.use('/user', userRouter);
+  newApp.use('/static', express.static(path.resolve(import.meta.dirname, 'static')));
+  newApp.use('/account', accountRouter);
+  newApp.use('/user', userRouter);
 
-  // init plugins
-  await plugins.initWithExpressApp(app);
+  // init plugins, then onboard (needs plugin permissions)
+  await plugins.initWithExpressApp(newApp);
+  await onboardInit();
 
   // ------------ must be last ------- //
-  app.use(expressErrorHandler);
+  newApp.use(expressErrorHandler);
+  app = newApp;
   return app;
 }
 
