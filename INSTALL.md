@@ -36,7 +36,7 @@ To deploy the bridge you need to create a "personal access token" On github with
 
 For some reason I didn't manage to create an "per-repo" access token
 
-Clone `bridge-hds`   
+Clone `lib-bridge-js`
 
 - Run:
   - `npm install`

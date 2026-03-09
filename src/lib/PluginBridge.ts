@@ -10,7 +10,7 @@ const { getLogger, getConfig } = boiler;
 /**
  * Utility to be extended by all plugins.
  * The main task is to centralize internals so the structure of
- * bridge-hds can be modified without affecting plugins.
+ * lib-bridge-js can be modified without affecting plugins.
  */
 export default class PluginBridge {
   /**

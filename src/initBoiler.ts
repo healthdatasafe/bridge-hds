@@ -1,7 +1,7 @@
 /**
  * To be called first for any app launch.
  * consumerConfigDir: path to the consumer's config/ directory (with default-config.yml).
- * If not provided, uses bridge-hds's own config/ directory.
+ * If not provided, uses lib-bridge-js's own config/ directory.
  */
 import path from 'path';
 import { createRequire } from 'module';
@@ -28,7 +28,7 @@ export default function initBoiler (appName: string, consumerConfigDir?: string)
       }
     }
   });
-  // Use consumer's config dir if provided, with bridge-hds defaults as fallback
+  // Use consumer's config dir if provided, with lib-bridge-js defaults as fallback
   const configDir = consumerConfigDir || bridgeConfigDir;
   const baseFilesDir = consumerConfigDir ? path.resolve(consumerConfigDir, '..') : path.resolve(import.meta.dirname, '..');
   const boiler = require('boiler').init({

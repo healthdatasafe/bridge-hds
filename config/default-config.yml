@@ -1,4 +1,4 @@
-# bridge-hds framework defaults
+# lib-bridge-js framework defaults
 # Consumer apps should provide their own default-config.yml with partner-specific values.
 
 # Server

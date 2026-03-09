@@ -1,4 +1,4 @@
-// bridge-hds public API
+// lib-bridge-js public API
 export { default as PluginBridge } from './lib/PluginBridge.ts';
 export { createBridgeApp, launch } from './server.ts';
 export { default as startCluster } from './start.ts';
