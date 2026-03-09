@@ -1,7 +1,7 @@
 /**
  * Manage the bridge connection and interaction
  */
-import boiler from 'boiler';
+import boiler from '@pryv/boiler';
 import { pryv } from 'hds-lib';
 import { internalError, serviceError } from '../errors/index.ts';
 

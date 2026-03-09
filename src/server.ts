@@ -1,4 +1,4 @@
-import boiler from 'boiler';
+import boiler from '@pryv/boiler';
 import path from 'path';
 import { createRequire } from 'module';
 import express from 'express';

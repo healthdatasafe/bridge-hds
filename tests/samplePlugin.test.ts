@@ -1,4 +1,4 @@
-import boiler from 'boiler';
+import boiler from '@pryv/boiler';
 import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
 import SampleBridge from './sample-bridge/index.ts';
 import assert from 'node:assert/strict';

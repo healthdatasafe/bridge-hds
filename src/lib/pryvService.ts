@@ -1,4 +1,4 @@
-import boiler from 'boiler';
+import boiler from '@pryv/boiler';
 import { HDSService, initHDSModel } from 'hds-lib';
 import ShortUniqueId from 'short-unique-id';
 import { internalError } from '../errors/index.ts';
