@@ -1,21 +1,19 @@
 {
-  "name": "bridge-hds",
+  "name": "lib-bridge-js",
   "version": "0.0.1",
-  "description": "Bridge between a partner Backend and HDS",
+  "description": "Bridge framework library for HDS partner integrations",
   "type": "module",
-  "main": "src/start.ts",
+  "main": "src/index.ts",
   "engines": {
     "npm": ">=9.6.5",
     "node": ">=22.6.0"
   },
   "scripts": {
     "start": "NODE_ENV=test LOGS=info node --experimental-strip-types src/start.ts --config localConfig.yml",
-    "start:prod": "NODE_ENV=production node --experimental-strip-types src/start.ts --config localConfig.yml",
-    "start:backloop": "NODE_ENV=development BACKLOOP=true node --experimental-strip-types src/start.ts --config localConfig.yml",
     "setup": "scripts/setup.sh",
     "setup-dev-env": "scripts/setup-dev-env.sh",
-    "test": "NODE_ENV=test node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' 'plugins/*/tests/**/*.test.ts' --test-reporter=spec -- --config localConfig.yml",
-    "test:coverage": "NODE_ENV=test c8 node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' 'plugins/*/tests/**/*.test.ts' -- --config localConfig.yml",
+    "test": "NODE_ENV=test node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' --test-reporter=spec -- --config localConfig.yml",
+    "test:coverage": "NODE_ENV=test c8 node --experimental-strip-types node_modules/mocha/bin/mocha.js 'tests/**/*.test.ts' -- --config localConfig.yml",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:change": "eslint $(git diff --name-only HEAD | grep -E '\\.(ts|tsx)$' | xargs)",

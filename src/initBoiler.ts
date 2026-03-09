@@ -1,5 +1,7 @@
 /**
- * To be called first for any app launch
+ * To be called first for any app launch.
+ * consumerConfigDir: path to the consumer's config/ directory (with default-config.yml).
+ * If not provided, uses bridge-hds's own config/ directory.
  */
 import path from 'path';
 import { createRequire } from 'module';
@@ -7,28 +9,32 @@ import type { Boiler, Config, ExtraConfig } from 'boiler';
 
 const require = createRequire(import.meta.url);
 
-export default function initBoiler (appName: string): Boiler {
+const bridgeConfigDir = path.resolve(import.meta.dirname, '../config');
+
+export default function initBoiler (appName: string, consumerConfigDir?: string): Boiler {
   const extraConfigs: ExtraConfig[] = [];
   if (process.env.NODE_ENV === 'test') {
-    extraConfigs.push({
-      scope: 'test-config',
-      file: path.resolve(import.meta.dirname, '../config/test-config.yml')
-    });
+    const testConfig = path.resolve(consumerConfigDir || bridgeConfigDir, 'test-config.yml');
+    extraConfigs.push({ scope: 'test-config', file: testConfig });
   }
   extraConfigs.push({
     pluginAsync: {
       load: async function (store: Config): Promise<string> {
         const storageDir = store.get<string>('storage:files:directory') || './storage';
-        const storageDirAbsolute = path.resolve(import.meta.dirname, '..', storageDir);
+        const baseDir = consumerConfigDir ? path.resolve(consumerConfigDir, '..') : path.resolve(import.meta.dirname, '..');
+        const storageDirAbsolute = path.resolve(baseDir, storageDir);
         store.set('storage:files:directoryAbsolute', storageDirAbsolute);
         return 'plugin-fileDirectoryAbsolute'; // my name
       }
     }
   });
+  // Use consumer's config dir if provided, with bridge-hds defaults as fallback
+  const configDir = consumerConfigDir || bridgeConfigDir;
+  const baseFilesDir = consumerConfigDir ? path.resolve(consumerConfigDir, '..') : path.resolve(import.meta.dirname, '..');
   const boiler = require('boiler').init({
-    appName, // This will will be prefixed to any log messages
-    baseFilesDir: path.resolve(import.meta.dirname, '..'), // use for file:// relative path if not give cwd() will be used
-    baseConfigDir: path.resolve(import.meta.dirname, '../config'),
+    appName,
+    baseFilesDir,
+    baseConfigDir: configDir,
     extraConfigs
   }) as Boiler;
   return boiler;

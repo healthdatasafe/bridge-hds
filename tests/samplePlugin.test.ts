@@ -1,13 +1,14 @@
 import boiler from 'boiler';
-import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from '../../../tests/helpers/testServer.ts';
+import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import SampleBridge from './sample-bridge/index.ts';
 import assert from 'node:assert/strict';
 
 const { getConfig } = boiler;
 
-describe('[PLTX] Plugin sample test', () => {
+describe('[PLTX] SampleBridge test', () => {
   let mainStreamId: string | null = null;
   before(async () => {
-    await initTestServer();
+    await initTestServer(new SampleBridge());
     // get the main streamId for the userPermissionRequest servic
     const config = await getConfig();
     const firsStream = (config.get('service:userPermissionRequest') as any[])[0];

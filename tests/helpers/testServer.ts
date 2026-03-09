@@ -8,19 +8,22 @@ import * as user from '../../src/methods/user.ts';
 import { requiredPermissionsAndStreams } from '../../src/lib/plugins.ts';
 import type { Application } from 'express';
 import type { Config } from 'boiler';
-
-const { getConfig } = initBoiler(`bridge:${process.pid}`);
+import type PluginBridge from '../../src/lib/PluginBridge.ts';
+import SampleBridge from '../sample-bridge/index.ts';
 
 let app: Application | null = null;
 let config: Config | null = null;
 
 /**
  * Initalize the server, to be run once before the tests.
+ * @param plugin - plugin instance (defaults to sample-plugin for lib-bridge-js tests)
+ * @param configDir - optional config directory (for consumer repos)
  */
-async function init (): Promise<void> {
+async function init (plugin?: PluginBridge, configDir?: string): Promise<void> {
+  const { getConfig } = initBoiler(`bridge:${process.pid}`, configDir);
   await initHDSModel();
   config = await getConfig();
-  app = await getApp();
+  app = await getApp(plugin || new SampleBridge());
   await pryvService.init();
 }
 

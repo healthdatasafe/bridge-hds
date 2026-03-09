@@ -1,47 +1,32 @@
-# The url exposed on the internet (ex via reverse proxy)
-baseURL: http://localhost:7432 # Exposed url no trailing '/'
+# bridge-hds framework defaults
+# Consumer apps should provide their own default-config.yml with partner-specific values.
 
-bridgeApiEndPoint: OVERRIDE_ME
-
-partnerAuthToken: OVERRIDE_ME # The token used to authenticate the partner backend
-
-partnerURLs:
-  webhookOnboard: 
-    url: https://WEBHOOK_TO_BE_SET # Call partner backend on sucess or failure of auth process
-    method: 'GET'
-    headers: 
-      secret: 'YOUR_SECRET'
-  defaultRedirectOnError: https://ON_ERROR_TO_BE_SET # A default redirect url in case of error need to be set
-
-service: 
-  serviceInfoURL: https://demo.datasafe.dev/reg/service/info
-  appId: bridge-partner
-  bridgeAccountMainStreamId: bridge # The root stream on the partner's bridge account
-  userPermissionRequest:
-    - streamId: partner-stream
-      level: manage
-      defaultName: Partner
-  consentMessage: Connect HDS with Partner. -- to be detailed -- 
-
-
-start:
-  # if numProcesses=0 launch 1 process per CPU
-  # if numProcesses>0 launch exactly numProcess processes
-  # if numProcesses<0 launch max(numCPU + numProcess, 1) process(es)
-  numProcesses: 0 
-
+# Server
 server:
   port: 7432
   host: '0.0.0.0'
 
-  logs: 
-  console: 
+# Clustering
+start:
+  # if numProcesses=0 launch 1 process per CPU
+  # if numProcesses>0 launch exactly numProcess processes
+  # if numProcesses<0 launch max(numCPU + numProcess, 1) process(es)
+  numProcesses: 0
+
+# Logging
+logs:
+  console:
     active: true
     level: info
-    format: 
+    format:
       color: true
       time: true
       aligned: true
-  file: 
+  file:
     active: true
     path: application.log
+
+# Storage
+storage:
+  files:
+    directory: ./storage

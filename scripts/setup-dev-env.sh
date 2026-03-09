@@ -10,7 +10,7 @@ cd $SCRIPT_FOLDER/.. # root
 # setup git pre-commit hook if appropriate ($CI is "true" in GitHub workflows)
 PRE_COMMIT="scripts/pre-commit"
 if [[ -d .git && "$CI" != "true" ]]; then
-  cp $PRE_COMMIT ../.git/hooks/
+  cp $PRE_COMMIT .git/hooks/
   echo ""
   echo "Git pre-commit hook setup from '$PRE_COMMIT'"
   echo ""

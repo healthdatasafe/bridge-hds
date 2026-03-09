@@ -1,4 +1,4 @@
-import type PluginBridge from '../../../../src/lib/PluginBridge.ts';
+import type { PluginBridge } from '../../../src/index.ts';
 
 /**
  * singleton of plugin

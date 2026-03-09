@@ -1,27 +1,115 @@
-# Partner to HDS Bridge
+# lib-bridge-js
 
-Machine to machine base service.
-Handles registration and authorization for a service to communication with HDS backend.
+Library for building HDS partner bridges — machine-to-machine services that handle user onboarding and data synchronization between partner platforms and [Health Data Safe](https://github.com/healthdatasafe).
 
-## Description
+Each bridge is a standalone app that depends on this library. See [bridge-chartneo](https://github.com/healthdatasafe/bridge-chartneo) for a real-world example.
 
-This service acts as a proxy between a partner service and HDS and handles 
-- The **onboarding** of the user, by allowing the to link their existing HDS account or to create a new one. 
-- Keeping a reference map of the user ids of the partner and HDS as well as the authorization to interact with the user account on HDS.
+## What it provides
 
-### Data synchronization and transformation and plugin development
+- Express server with clustering, CORS, JSON parsing, error handling
+- Partner authentication middleware (`partnerAuthToken` header check)
+- User onboarding flow (initiate → HDS auth → finalize → webhook)
+- Bridge account management (user credentials, sync status, error logging)
+- `PluginBridge` base class for partner-specific logic
+- Test utilities for consumer repos
 
-Data synchronization and transformation is specific for each partner. Each "bridge" should rely on at least one **plugin** handle data. The service is not designed to handle multiple plugins, but it is kept this way in order to perform ordinary tests alongisde plugin's. 
+## Public API
 
-A sample plugin is available as a starting point in `sample-plugin` folder.
+```typescript
+import {
+  PluginBridge,        // Base class — extend this for your bridge
+  startCluster,        // Entry point with clustering
+  createBridgeApp,     // Express app factory
+  initBoiler,          // Config initialization (accepts consumer configDir)
+  errors,              // Error helpers (assertFromPartner, badRequest, etc.)
+  Router,              // express-promise-router
+  initHDSModel,        // HDS data model init (re-exported from hds-lib)
+  getHDSModel,         // HDS data model access (re-exported from hds-lib)
+  testServer           // Test helpers (init, apiTest, createOnboardedUser, etc.)
+} from 'lib-bridge-js';
+```
 
-### Onboarding Flow
+## Creating a bridge
 
-⚠️ Before "onboarding" a user consider checking it's status with `GET /user/{partnerUserId}/status`  
+### 1. Define your bridge class
 
-This is a summary of the flow in case of sucessfull onboarding
+```typescript
+// src/index.ts
+import { PluginBridge } from 'lib-bridge-js';
+import type { Application } from 'express';
 
-A detailed flow can be found in [./doc/onboarding-flow-detail.md](./doc/onboarding-flow-detail.md)
+export default class MyBridge extends PluginBridge {
+  override get key () { return 'my-bridge'; }
+
+  override get potentialCreatedItemKeys () {
+    return ['body-weight']; // HDS item keys this bridge creates
+  }
+
+  override async init (app: Application, bridgeConnectionGetter: () => unknown) {
+    await super.init(app, bridgeConnectionGetter);
+    // Load routes, initialize singletons
+    app.use('/data/', myDataRoute);
+  }
+
+  override async newUserAssociated (partnerUserId: string, apiEndPoint: string) {
+    // Called when a user completes onboarding
+    return { status: 'ok' };
+  }
+}
+```
+
+### 2. Create the entry point
+
+```typescript
+// src/start.ts
+import { startCluster } from 'lib-bridge-js';
+import MyBridge from './index.ts';
+startCluster(new MyBridge(), import.meta.dirname + '/../config');
+```
+
+### 3. package.json
+
+```json
+{
+  "dependencies": {
+    "lib-bridge-js": "git+https://github.com/healthdatasafe/lib-bridge-js.git"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types src/start.ts",
+    "setup:dev": "npm install && cd node_modules/lib-bridge-js && npm install"
+  }
+}
+```
+
+The bridge's only dependency is `lib-bridge-js` — all other packages (express, hds-lib, boiler, etc.) come transitively. `setup:dev` installs lib-bridge-js's devDependencies (mocha, supertest, etc.) for testing.
+
+### 4. Configuration
+
+Provide a `config/` directory with:
+- `default-config.yml` — framework defaults + bridge-specific defaults (service config, permissions, etc.)
+- `test-config.yml` — test overrides (unsafe token, localhost, disabled logs)
+- `localConfig.yml` — minimal, just deployment secrets (`bridgeApiEndPoint`)
+
+In production (Dokku), secrets come from environment variables — no mounted config files needed.
+
+## Bridge API
+
+### Authorization
+
+All API calls require the `Authorization` header with the value set in `partnerAuthToken`.
+
+### `POST /user/onboard`
+
+Initiate user onboarding.
+
+**@body**
+- `partnerUserId`: {string}
+- `redirectURLs`: {Object} — `success`, `cancel` URLs
+- `clientData`: {Object} — key-value pairs sent back via webhook
+
+**@returns** — either `authRequest` (new user) or `userExists` (already onboarded)
+
+### Onboarding flow
 
 ```mermaid
 sequenceDiagram
@@ -35,321 +123,59 @@ sequenceDiagram
   activate U
   Note over U: Register or Login on HDS <br/> Grant Authorization
   U->>+B: Finalize onboarding
-  B->>P: Call WebHook<BR>(partnerUserId, onboardingSecret, status, ...) 
+  B->>P: Call WebHook<BR>(partnerUserId, onboardingSecret, status, ...)
   B-->>-U: Redirect to redirectURLs.success provided at "onboard"
-  deactivate U 
-
+  deactivate U
 ```
 
-## Bridge API
-
-### `Authorization`
-
-Unless specified in the documentation, a secret has to be provided for each API call in the header `Authorization` this secret is set by the configuration setting `partnerAuthToken`. 
-
-### `POST /user/onboard` Onboarding request
-
-**@body**
-
-  - `partnerUserId`: {string} partnerUserId 
-  - `redirectURLs`: {Object} with 3 returnURL
-    - `sucess`: {string} in case of success
-    - `cancel`: {string} in case of cancel of operation by user
-  - `clientData`: {Object} - key value object to be sent back as a query parameter or body of the web hook. This will also be provided to the plugin for new user initialization. 
-
-**@returns**
-
-Returns can be of two types `authrequest` or `userExists`
-
-  - **type authRequest** 
-    - `type`:  {string} 'authRequest' 
-    - `onboardingSecret`: {string} Secret for machine to machine exchange will be sent alongside other parameters with web-hook calls (unique to this onboarding instance).
-    - `redirectUserURL`: {object} - redirect the user to this URL (may be a popup)
-    - `context`: {Object} In a standard usage of the bridge, you should not need to have any use for it. If interested, you will find documentation on [auth-request documentation.](https://pryv.github.io/reference/#auth-request) 
-
- - **type userExists** 
-    - `type`:  {string} 'userExists' 
-    - `user`: {Object} 
-      - `active`: {boolean} Active / Non Active user
-      - `partnerUserId`: {string} 
-      - `apiEndpoint`: {string} Pryv.io API endpoint
-      - `created`: {number} EPOCH 
-      - `modified`: {number} EPOCH
-
-
-**example**
-
-Request: 
-
-```json
-{
-  "partnerUserId": "xyz",
-  "redirectURLs": {
-    "success": "https://success.domain",
-    "cancel": "https://cancel.domain"
-  },
-  "clientData": {
-    "test": "Hello test"
-  }
-}
-```
-
-Response **userExists**: 
-
-```json
-{
-  "type": "userExists",
-  "user": {
-    "active": true,
-    "partnerUserId": "xyz",
-    "apiEndpoint": "https://cm88fjzgk03njj8k9b3iad4bz@demo.datasafe.dev/fr90us3t/",
-    "created": 1744112507.271,
-    "modified": 1744112507.271
-  }
-}
-```
-
-Response **authRequest**: 
-
-```json
-{
-  "type": "authRequest",
-  "onboardingSecret": "GalWQDvCb7xoJJLRZkxohCfQ",
-  "redirectUserURL": "https://demo.datasafe.dev/www/access/access.html?lang=en&key=Au6gSTJ4tRQ1FEnK&requestingAppId=chartneo-bridge&returnURL=http%3A%2F%2Flocalhost%3A7432%2Fuser%2Fonboard%2Ffinalize%2Fu48dq83a&domain=open-pryv.io&registerURL=https%3A%2F%2Fdemo.datasafe.dev%2Freg%2F&poll=https%3A%2F%2Fdemo.datasafe.dev%2Freg%2Faccess%2FAu6gSTJ4tRQ1FEnK",
-  "context": { }
-}
-
-```
+Detailed flow: [doc/onboarding-flow-detail.md](./doc/onboarding-flow-detail.md)
 
 ### `GET /user/{partnerUserId}/status`
 
-**@params**
-
-  - `partnerUserId` (from URL)
-
-**@returns** (status code 404 if not found)
-
-  - Current partnerUserId status
-
-    ```js
-    {
-      user: {
-        active: true, // or false
-        partnerUserId: 'xyz', // the user Id of your platform
-        apiEndpoint:'https://{token}@{domain}/path', // pryvApiEndpoint including credentials
-        created: 0000, // EPOCH time
-        modified:  0000, // EPOCH time
-      },
-      syncStatus: {
-        content: {
-          // Object describing the sync status of this account todo 
-        }
-        lastSync:  0000, // EPOCH time
-      }
-    }
-    ```
-
-    Time is in milliseconds since 1970.
+Returns user status, credentials, and sync status. 404 if not found.
 
 ### `POST /user/{partnerUserId}/status`
 
-Change the **active** status of a user
-
-**@body**
-
-  - `active`: {boolean} newStatus 
-
-**@returns**
-
-  - `active`: {boolean} newStatus
+Change the `active` status of a user. Body: `{ "active": true|false }`.
 
 ### `GET /account/errors/`
 
-Retrieve the error log.
+Retrieve error log from the bridge account. Query params: `limit`, `fromTime`, `toTime`.
 
-When failing during an onboarding process, for example, when contacting a webhook. Errors are kept on the bridge account.
+### Webhook
 
-**@query parameters**
-- `limit`: {integer} max number of items 
-- `fromTime`: {number} EPOCH time
-- `toTime`: {number} EPOCH time
+The partner webhook is called on onboarding success, cancel, or error. Configured via `partnerURLs.webhookOnboard` (url, method, headers).
 
-**@result**
-Formated as a [Pryv event](https://pryv.github.io/reference/#data-structure-event) 
+Parameters sent: `type` (SUCCESS/CANCEL/ERROR), `partnerUserId`, `onboardingSecret`, `clientData` values, `pluginResultJSON` (on success).
 
-Notable information are 
-- `content.message`: The message for this error
-- `content.errorObject`: Details 
+## Storage
 
-**@example**
-```json
-[
-  {
-    "type": "error/message-object",
-    "streamIds": [
-      "bridge-errors"
-    ],
-    "content": {
-      "message": "Failed finalizing onboarding",
-      "errorObject": {
-        "partnerUserId": "a8jfl3u9",
-        "pollParam": "https://demo.datasafe.dev/reg/access/HvAdcsaWV0tyLI4I",
-        "innerErrorMessage": "Failed contacting partner backend",
-        "innerErrorObject": {
-          "webhookCall": {
-            "whSettings": {
-              "url": "http://127.0.0.1:8365/",
-              "method": "GET",
-              "headers": {
-                "secret": "toto"
-              }
-            },
-            "params": {
-              "partnerUserId": "a8jfl3u9",
-              "onboardingSecret": "UfgKmNil3o5gx9TtHR5MEp6M",
-              "test": "Hello test",
-              "type": "SUCCESS"
-            }
-          }
-        }
-      }
-    },
-    "time": 1744113582.638,
-    "created": 1744113582.638,
-    "createdBy": "cm8t0tdvm010mj8k94z4o48h7",
-    "modified": 1744113582.638,
-    "modifiedBy": "cm8t0tdvm010mj8k94z4o48h7",
-    "integrity": "EVENT:0:sha256-GY4m/JMYvKj3v9Xhrrp3vWhAGdV0R3NGwCgdbapkQ8U=",
-    "id": "cm98g719q03ofj8k9emca2qpc",
-    "tags": [],
-    "streamId": "bridge-errors"
-  }
-]
+The bridge uses a dedicated HDS account for storage. Under the root stream (`service.bridgeAccountMainStreamId`, default "bridge"):
+- `bridge-users` → `bridge-user-{partnerUserId}` — per-user credentials and auth requests
+- `bridge-users-active` — tags active user credentials
+- `bridge-errors` — onboarding error log
+
+## Prerequisites
+
+- Node.js >= 22.6.0
+- npm >= 9.6.5
+
+## Setup
+
+```bash
+npm run setup            # Install dependencies + HDS setup
+npm run setup-dev-env    # Dev environment (test HDS account)
 ```
 
+Edit `localConfig.yml` — see `config/sample-localConfig.yml` for reference.
 
-### Errors 
+## Development
 
-Errors are returned in json with the following properties
+```bash
+npm test                 # Run tests
+npm test -- --grep=PLTX  # Run specific tests
+npm run test:coverage    # Coverage report
+npm run lint             # Lint
+```
 
-  - `error`: {string} message
-  - `errorObject`: {object} details on the error
-
-## Webhook 
-
-A webhook on the partner server side will be notified of succes, failure or errors of the onboarding process
-
-The settings for the webhook are defined under the `partnerURLs:webhookOnboard` in `localConfig.yml` with the settings are:
-
-- `url`: {string} "http:... "
-- `method`: {string} "GET" or "POST"
-- `headers`: {Object as key - value} they will be sent with each WebHook call, you may set a secret token there.
-
-**parameters** 
-GET method: parameters are sent as query parameters
-POST method: parameters are sent as query parameters in JSON as body
-
-**'SUCCESS' or 'CANCEL'**
-  - `type`: {string} "SUCCESS", "CANCEL"
-  - `partnerUserId`: {string} 
-  - `onboardingSecret`: {string} the secret for M2M security send during the onboarding initiate call.
-  - `...`: {string} the content of the `clientData` key value sent during `POST /user/onboard` 
-  - `pluginResultJSON`: {string} **Only in case of "SUCCESS"** the result provided by the plugin when a user is associated. It is sent a JSON to ensure a correct transmission with "GET" method
-   - `status`: {string} "REFUSED" **Only in case of "CANCEL"** (no uses for now, maybe timeout in the future)
-
-**'ERROR''**
-`onboardingSecret`, and `clientData` values are optionnaly provided if the error happend after retreiving the onboarding session. 
-  - `type`: {string} "ERROR"
-  - `partnerUserId`: {string} 
-  - `error`: {string} an error message
-  - `errorObjectJSON`: {string} error details JSON stringified
-
-## Redirect URLs
-During the onboarding process the user can be redirected to 3 distinct. 
-- for **SUCCESS** and **CANCEL** cases they are defined in the `POST /user/onboard` API call 
-- for **ERROR** case this is defined with the setting `partnerURLs:defaultRedirectOnError` as the orginal request for inboarding might not be found. 
-
-## Storage & Structure
-
-A "Partner" account is used for storage on HDS 
-
-This service uses a standard user on HDS to store the states of the onboarding process, eventual errors during communication and, finally, the authorized user credentials.
-
-Given a rootStream ID to be set in the configuration file `service:bridgeAccountMainStreamId` (default "bridge") a set of streams will be created using this streamId as prefix + '-'. 
-Exemple:
-- **bridge**
-  - **bridge-users**
-    - **bridge-user-{partnerUserId}**
-      Each user will have its own stream containing events of types: `temp-status/bridge-auth-request` and `credentials/pryv-api-endpoint`
-  - **bridge-users-active**
-    This stream is used for tagging, active `credentials/pryv-api-endpoint` as a secondary stream
-  - **bridge-errors**
-    This stream will log eventual errors regarding the onboarding process. For example if the web hook does not respond.
-
-
-### TODOs
-
-- [X] design initialization flow
-- [X] endpoint to onboard patient
-- [X] define return parameters 
-- [X] create base stream structure for user
-- [ ] Finalize base stream structure for user
-- [X] Add data synchronization status
-- [ ] Deactivate and set the account as "unauthorized" when access is revoked.
-- [X] Allow partner to revoke an access
-- [ ] Evaluate an errorRedirect for onbording with the same schema than forwarding the secret.
-- [ ] Add a logic to ensure that the same account cannot be linked twice
-- [ ] Remotely load & override config from partner Account (option)
-- [X] Add security to check requests are coming from Partner
-
-
-## Custom events-type 
-Pryv default event types are listed here: https://pryv.github.io/event-types/
-
-Here is the list of custom event-types used by the bridge
-
-- **sync-status/bridge** to record each synchronization status (use on user's streams)
-  - content: {object} -- freeform depends on each plugin flavor
-
-- **temp-status/bridge-auth-request** to record each synchronization status (use on user's streams)
-  - content: 
-    - redirectURLs: given during the onboarding request
-    - webhookClientData: given during the onboarding request
-    - onboardingSecret: secret of M2M control
-    - responseBody: result of https://pryv.github.io/reference/#auth-request
-
-
-### Install for dev
-
-For production read: [./INSTALL.md](./INSTALL.md) 
-
-- `npm install`
-- `npm run setup`
-- `npm run setup-dev-env` (for dev environment)
-
-Edit `localConfig.yml` you may get inspiration from `./config/sample-localConfig.yml`
-
-for the setting: `bridgeApiEndPoint`; if you don't know it or don't yet have a "managing account" dedicated to the bridge. You may use the following command to create it or retrieve the apiEndpoint: 
-`node tools/createBridgeAccountUser.js --config ./localConfig.yml`
-The token, must have access with 'manage' access rights to the corresponding to the setting `service:bridgeAccountMainStreamId`.
-
-
-### Development 
-
-- `npm run test` for testing
-- `npm run test -- --grep={string}` test and grep 
-- `npm run test:coverage` for coverage 
-
-Appending `LOGS=info`, `LOGS=errors` or `DEBUG="*"` will change the level of output
-Example `DEBUG=*config* npm run start` will show debug lines from configuration plugin
-
-### Code
-
-Please use `npm run lint` to validate your changes before committing
-
-`npm run lint:fix` may fix some ;)
-
-- Complete and use `errors.js` to generate coherent errors.
-- For logging purposes check how `getLogger()` works
-- Jsdoc is your friend
-- Please write tests to achieve the best coverage.
+The test suite includes `SampleBridge` in `tests/sample-bridge/` — a minimal bridge that demonstrates how to use the library. It follows the same pattern as real bridges like bridge-chartneo.

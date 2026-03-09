@@ -1,7 +1,6 @@
-import Router from 'express-promise-router';
+import { Router } from '../../../src/index.ts';
 import { newData } from '../methods/handleData.ts';
-import type PluginBridge from '../../../../src/lib/PluginBridge.ts';
-import type { Request, Response } from 'express';
+import type { PluginBridge } from '../../../src/index.ts';
 
 /**
  * initialize plugin and return router;

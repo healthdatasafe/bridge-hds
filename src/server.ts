@@ -14,6 +14,7 @@ import accountRouter from './routes/accountRoute.ts';
 import userRouter from './routes/userRoute.ts';
 import { expressErrorHandler } from './errors/index.ts';
 import loggerMiddleware from './middlewares/logger.ts';
+import type PluginBridge from './lib/PluginBridge.ts';
 
 const { getLogger, getConfig } = boiler;
 let _logger: ReturnType<typeof getLogger> | null = null;
@@ -31,10 +32,10 @@ const initAsyncComponents = [
 let app: Application | null = null;
 
 /**
- * App is a singleton
- * getApp either initalize the application or return the active one
+ * Create a configured Express app with the given plugin.
+ * App is a singleton — subsequent calls return the same instance.
  */
-async function getApp (): Promise<Application> {
+async function createBridgeApp (plugin?: PluginBridge): Promise<Application> {
   if (app != null) return app;
   // initalize singletons & configs
   for (const init of initAsyncComponents) {
@@ -55,8 +56,8 @@ async function getApp (): Promise<Application> {
   newApp.use('/account', accountRouter);
   newApp.use('/user', userRouter);
 
-  // init plugins, then onboard (needs plugin permissions)
-  await plugins.initWithExpressApp(newApp);
+  // init plugin, then onboard (needs plugin permissions)
+  await plugins.initWithExpressApp(newApp, plugin);
   await onboardInit();
 
   // ------------ must be last ------- //
@@ -67,10 +68,10 @@ async function getApp (): Promise<Application> {
 
 /* c8 ignore start - Cannot be tested with supertest */
 /**
- * Launch a server instance
+ * Launch a server instance with the given plugin.
  */
-async function launch (): Promise<Application> {
-  const currentApp = await getApp();
+async function launch (plugin?: PluginBridge): Promise<Application> {
+  const currentApp = await createBridgeApp(plugin);
   const config = await getConfig();
   const configServer = config.get<{ port?: number; host?: string }>('server');
   const port = configServer.port || 7432;
@@ -89,4 +90,7 @@ async function launch (): Promise<Application> {
 }
 /* c8 ignore stop */
 
-export { launch, getApp };
+// Legacy alias
+const getApp = createBridgeApp;
+
+export { launch, createBridgeApp, getApp };

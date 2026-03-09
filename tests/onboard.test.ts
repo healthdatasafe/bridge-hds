@@ -87,7 +87,7 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function
     const pluginsResults = JSON.parse(capturedQuery!.pluginsResultJSON as string);
     delete (capturedQuery as Record<string, unknown>).pluginsResultJSON;
     assert.deepEqual(capturedQuery, { partnerUserId, onboardingSecret, test: 'Hello test', type: 'SUCCESS' });
-    assert.deepEqual(pluginsResults.sample, { dummy: 'Acknowledged by sample plugin' });
+    assert.deepEqual(pluginsResults.sample, { dummy: 'Acknowledged by SampleBridge' });
 
     // -- Finaly 2 - Check that user is active
     const userStatusResponse = await apiTest().get(`/user/${partnerUserId}/status`).set(partnerAuth());
@@ -230,7 +230,7 @@ describe('[ONBE] Onboarding User with failing Webhooks', () => {
     // for test plugins just check sample and if no error
     for (const [key, value] of Object.entries(pluginResultsJSON)) {
       if (key === 'sample') {
-        assert.deepEqual(value, { dummy: 'Acknowledged by sample plugin' });
+        assert.deepEqual(value, { dummy: 'Acknowledged by SampleBridge' });
       } else {
         assert.ok((value as Record<string, unknown>).error == null);
       }
