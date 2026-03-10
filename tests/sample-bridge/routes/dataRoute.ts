@@ -1,6 +1,7 @@
 import { Router } from '../../../src/index.ts';
 import { newData } from '../methods/handleData.ts';
 import type { PluginBridge } from '../../../src/index.ts';
+import type { Request, Response } from 'express';
 
 /**
  * initialize plugin and return router;
@@ -15,7 +16,7 @@ export default function (plugin: PluginBridge) {
    * Simply forward data to api of the user
    */
   router.post('/test/:partnerUserId', async (req: Request, res: Response) => {
-    plugin.assertFromPartner(req); // check if the request is from a partne
+    plugin.assertFromPartner(req); // check if the request is from a partner
     const partnerUserId = req.params.partnerUserId!;
     const data = req.body;
     if (!Array.isArray(data)) plugin.errors.badRequest('data should be an array', data);
@@ -30,7 +31,7 @@ export default function (plugin: PluginBridge) {
    * Simply forward data to api of the user
    */
   router.post('/test/:partnerUserId/api', async (req: Request, res: Response) => {
-    plugin.assertFromPartner(req); // check if the request is from a partne
+    plugin.assertFromPartner(req); // check if the request is from a partner
     const partnerUserId = req.params.partnerUserId!;
     if (!partnerUserId) plugin.errors.badRequest('Missing partnerUserId');
     const hdsUser = await plugin.getPryvUserConnectionAndStatus(partnerUserId); // retrieve the user

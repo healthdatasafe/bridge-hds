@@ -25,7 +25,7 @@ const REGEXP_URL = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/;
  * Middleware for express to manage errors
  */
 function expressErrorHandler (err: AppError, req: Request, res: LogResponse, next: NextFunction): void {
-  expressErrorLogger().error(err, err);
+  expressErrorLogger().error(err.message, err);
   if (res.headersSent) {
     next(err);
     return;

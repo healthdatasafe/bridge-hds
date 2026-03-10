@@ -14,5 +14,5 @@ export { requiredPermissionsAndStreams } from './lib/plugins.ts';
 export { init as initPryvService, createuser as createPryvUser } from './lib/pryvService.ts';
 export { addCredentialToBridgeAccount } from './methods/user.ts';
 
-// Test helpers — reusable by consumer repos
-export * as testServer from '../tests/helpers/testServer.ts';
+// Test helpers — available via 'lib-bridge-js/test' (separate entry to avoid loading test deps in production)
+// import * as testServer from 'lib-bridge-js/test';

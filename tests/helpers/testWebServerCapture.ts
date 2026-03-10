@@ -94,7 +94,7 @@ async function startHttpServerCapture (params?: { port?: number }): Promise<Http
       res.write(response.body);
       res.end();
     } catch (e) {
-      getLoggerLazy().error(e);
+      getLoggerLazy().error(String(e));
     }
     getLoggerLazy().info('WebServerCapture sent ');
   }
