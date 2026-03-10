@@ -34,9 +34,4 @@ export default async function startCluster (plugin?: PluginBridge, configDir?: s
   }
 }
 
-// When run directly (not imported as library), start with no plugin
-// This supports the legacy `node src/start.ts` usage and tests
-const isDirectRun = process.argv[1]?.endsWith('start.ts') || process.argv[1]?.endsWith('start.js');
-if (isDirectRun && !process.argv[1]?.includes('mocha')) {
-  startCluster();
-}
+// Legacy auto-run removed — consumers must call startCluster() explicitly from their own start.ts
