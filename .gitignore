@@ -1,5 +1,5 @@
 /node_modules
-/dist
+# /dist — committed so git-based consumers get compiled JS
 /application.log
 /debugLog
 /coverage
