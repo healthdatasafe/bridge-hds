@@ -11,6 +11,8 @@ export { default as Router } from 'express-promise-router';
 export { requiredPermissionsAndStreams } from "./lib/plugins.js";
 export { init as initPryvService, createuser as createPryvUser } from "./lib/pryvService.js";
 export { addCredentialToBridgeAccount } from "./methods/user.js";
+// Shared cache (cluster-safe via memored)
+export { cacheGet, cacheSet, cacheDel, initCacheLocal } from "./lib/cache.js";
 // Test helpers — available via 'lib-bridge-js/test' (separate entry to avoid loading test deps in production)
 // import * as testServer from 'lib-bridge-js/test';
 //# sourceMappingURL=index.js.map

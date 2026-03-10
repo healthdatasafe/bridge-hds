@@ -8,4 +8,5 @@ export { default as Router } from 'express-promise-router';
 export { requiredPermissionsAndStreams } from './lib/plugins.ts';
 export { init as initPryvService, createuser as createPryvUser } from './lib/pryvService.ts';
 export { addCredentialToBridgeAccount } from './methods/user.ts';
+export { cacheGet, cacheSet, cacheDel, initCacheLocal } from './lib/cache.ts';
 //# sourceMappingURL=index.d.ts.map

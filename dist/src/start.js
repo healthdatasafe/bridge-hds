@@ -2,6 +2,7 @@ import initBoiler from "./initBoiler.js";
 import cluster from 'cluster';
 import os from 'os';
 import * as server from "./server.js";
+import { initCacheMaster } from "./lib/cache.js";
 /**
  * Start the bridge with clustering.
  * @param plugin - Plugin instance to use (optional for backward compat)
@@ -13,6 +14,7 @@ export default async function startCluster(plugin, configDir) {
     const logger = getLogger('start');
     const config = await getConfig();
     if (cluster.isPrimary) {
+        initCacheMaster();
         logger.info(`Master process ${process.pid} is running`);
         const configNumProcesses = config.get('start:numProcesses') || numCPUs;
         const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;

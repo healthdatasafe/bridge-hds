@@ -57,5 +57,18 @@ export default class PluginBridge {
      * Log a successfull synchronization
      */
     logSyncStatus(partnerUserId: string, time: number | null, content: unknown): Promise<unknown>;
+    /**
+     * Store a value in the shared cluster cache.
+     * Shared across all workers in cluster mode.
+     */
+    cacheSet(key: string, value: unknown, ttlMs?: number): Promise<void>;
+    /**
+     * Get a value from the shared cluster cache.
+     */
+    cacheGet<T = unknown>(key: string): Promise<T | undefined>;
+    /**
+     * Delete a value from the shared cluster cache.
+     */
+    cacheDel(key: string): Promise<void>;
 }
 //# sourceMappingURL=PluginBridge.d.ts.map

@@ -1,4 +1,5 @@
 import initBoiler from '../../src/initBoiler.ts';
+import { initCacheLocal } from '../../src/lib/cache.ts';
 import request from 'supertest';
 import ShortUniqueId from 'short-unique-id';
 import { getApp } from '../../src/server.ts';
@@ -20,6 +21,7 @@ let config: Config | null = null;
  * @param configDir - optional config directory (for consumer repos)
  */
 async function init (plugin?: PluginBridge, configDir?: string): Promise<void> {
+  initCacheLocal();
   const { getConfig } = initBoiler(`bridge:${process.pid}`, configDir);
   await initHDSModel();
   config = await getConfig();

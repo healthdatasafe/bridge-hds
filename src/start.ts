@@ -3,6 +3,7 @@ import cluster from 'cluster';
 import os from 'os';
 import * as server from './server.ts';
 import type PluginBridge from './lib/PluginBridge.ts';
+import { initCacheMaster } from './lib/cache.ts';
 
 /**
  * Start the bridge with clustering.
@@ -16,6 +17,7 @@ export default async function startCluster (plugin?: PluginBridge, configDir?: s
 
   const config = await getConfig();
   if (cluster.isPrimary) {
+    initCacheMaster();
     logger.info(`Master process ${process.pid} is running`);
     const configNumProcesses = config.get<number>('start:numProcesses') || numCPUs;
     const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;

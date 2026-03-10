@@ -2,6 +2,7 @@ import boiler from '@pryv/boiler';
 import * as errors from "../errors/index.js";
 import * as user from "../methods/user.js";
 import { logSyncStatus } from "./bridgeAccount.js";
+import { cacheGet, cacheSet, cacheDel } from "./cache.js";
 const { getLogger, getConfig } = boiler;
 /**
  * Utility to be extended by all plugins.
@@ -96,6 +97,26 @@ export default class PluginBridge {
      */
     async logSyncStatus(partnerUserId, time, content) {
         return logSyncStatus(partnerUserId, time, content);
+    }
+    // --------- shared cache ------------- //
+    /**
+     * Store a value in the shared cluster cache.
+     * Shared across all workers in cluster mode.
+     */
+    async cacheSet(key, value, ttlMs) {
+        return cacheSet(key, value, ttlMs);
+    }
+    /**
+     * Get a value from the shared cluster cache.
+     */
+    async cacheGet(key) {
+        return cacheGet(key);
+    }
+    /**
+     * Delete a value from the shared cluster cache.
+     */
+    async cacheDel(key) {
+        return cacheDel(key);
     }
 }
 //# sourceMappingURL=PluginBridge.js.map

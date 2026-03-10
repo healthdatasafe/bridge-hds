@@ -4,6 +4,7 @@ import type { Application } from 'express';
 import * as errors from '../errors/index.ts';
 import * as user from '../methods/user.ts';
 import { logSyncStatus } from './bridgeAccount.ts';
+import { cacheGet, cacheSet, cacheDel } from './cache.ts';
 
 const { getLogger, getConfig } = boiler;
 
@@ -112,5 +113,29 @@ export default class PluginBridge {
    */
   async logSyncStatus (partnerUserId: string, time: number | null, content: unknown): Promise<unknown> {
     return logSyncStatus(partnerUserId, time, content);
+  }
+
+  // --------- shared cache ------------- //
+
+  /**
+   * Store a value in the shared cluster cache.
+   * Shared across all workers in cluster mode.
+   */
+  async cacheSet (key: string, value: unknown, ttlMs?: number): Promise<void> {
+    return cacheSet(key, value, ttlMs);
+  }
+
+  /**
+   * Get a value from the shared cluster cache.
+   */
+  async cacheGet<T = unknown> (key: string): Promise<T | undefined> {
+    return cacheGet<T>(key);
+  }
+
+  /**
+   * Delete a value from the shared cluster cache.
+   */
+  async cacheDel (key: string): Promise<void> {
+    return cacheDel(key);
   }
 }

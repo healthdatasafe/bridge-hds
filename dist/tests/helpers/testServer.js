@@ -1,4 +1,5 @@
 import initBoiler from "../../src/initBoiler.js";
+import { initCacheLocal } from "../../src/lib/cache.js";
 import request from 'supertest';
 import ShortUniqueId from 'short-unique-id';
 import { getApp } from "../../src/server.js";
@@ -15,6 +16,7 @@ let config = null;
  * @param configDir - optional config directory (for consumer repos)
  */
 async function init(plugin, configDir) {
+    initCacheLocal();
     const { getConfig } = initBoiler(`bridge:${process.pid}`, configDir);
     await initHDSModel();
     config = await getConfig();
