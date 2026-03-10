@@ -1,9 +1,12 @@
 import boiler from '@pryv/boiler';
 import path from 'path';
+import fs from 'fs';
 import { createRequire } from 'module';
 import express from 'express';
 import type { Application } from 'express';
 import cors from 'cors';
+
+const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf-8'));
 
 import { init as pryvServiceInit } from './lib/pryvService.ts';
 import { init as bridgeAccountInit } from './lib/bridgeAccount.ts';
@@ -50,6 +53,10 @@ async function createBridgeApp (plugin?: PluginBridge): Promise<Application> {
   // keep first
   newApp.use(loggerMiddleware);
   newApp.use(checkAuth.checkIfPartner);
+
+  newApp.get('/status', (_req, res) => {
+    res.json({ status: 'ok', name: pkg.name, version: pkg.version, uptime: Math.floor(process.uptime()) });
+  });
 
   // static ressource are temporary until handled by externall apps.
   newApp.use('/static', express.static(path.resolve(import.meta.dirname, 'static')));
