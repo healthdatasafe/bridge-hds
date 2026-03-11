@@ -6,7 +6,9 @@ import * as user from '../methods/user.ts';
 import { logSyncStatus } from './bridgeAccount.ts';
 import { cacheGet, cacheSet, cacheDel } from './cache.ts';
 
-const { getLogger, getConfig } = boiler;
+const { getLogger: _getLogger, getConfig } = boiler;
+
+export const getLogger = _getLogger;
 
 /**
  * Utility to be extended by all plugins.
@@ -44,7 +46,7 @@ export default class PluginBridge {
   #bridgeConnectionGetter: (() => unknown) | null = null;
 
   constructor () {
-    this.logger = getLogger('plugin:' + this.key);
+    this.logger = _getLogger('plugin:' + this.key);
     this.errors = errors;
   }
 

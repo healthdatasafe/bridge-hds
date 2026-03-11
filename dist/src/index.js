@@ -5,12 +5,15 @@ export { default as startCluster } from "./start.js";
 export { default as initBoiler } from "./initBoiler.js";
 export * as errors from "./errors/index.js";
 // Re-export essentials for consumers
-export { initHDSModel, getHDSModel } from 'hds-lib';
+export { initHDSModel, getHDSModel, pryv } from 'hds-lib';
 export { default as Router } from 'express-promise-router';
+export { default as ShortUniqueId } from 'short-unique-id';
 // Utilities needed by consumers (testing, setup)
 export { requiredPermissionsAndStreams } from "./lib/plugins.js";
 export { init as initPryvService, createuser as createPryvUser } from "./lib/pryvService.js";
 export { addCredentialToBridgeAccount } from "./methods/user.js";
+// Logger (re-exported from @pryv/boiler to avoid duplicate singleton issues)
+export { getLogger } from "./lib/PluginBridge.js";
 // Shared cache (cluster-safe via memored)
 export { cacheGet, cacheSet, cacheDel, initCacheLocal } from "./lib/cache.js";
 // Test helpers — available via 'lib-bridge-js/test' (separate entry to avoid loading test deps in production)

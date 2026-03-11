@@ -1,6 +1,8 @@
+import boiler from '@pryv/boiler';
 import type { Logger } from '@pryv/boiler';
 import type { Application } from 'express';
 import * as errors from '../errors/index.ts';
+export declare const getLogger: typeof boiler.getLogger;
 /**
  * Utility to be extended by all plugins.
  * The main task is to centralize internals so the structure of

@@ -3,7 +3,8 @@ import * as errors from "../errors/index.js";
 import * as user from "../methods/user.js";
 import { logSyncStatus } from "./bridgeAccount.js";
 import { cacheGet, cacheSet, cacheDel } from "./cache.js";
-const { getLogger, getConfig } = boiler;
+const { getLogger: _getLogger, getConfig } = boiler;
+export const getLogger = _getLogger;
 /**
  * Utility to be extended by all plugins.
  * The main task is to centralize internals so the structure of
@@ -35,7 +36,7 @@ export default class PluginBridge {
      */
     #bridgeConnectionGetter = null;
     constructor() {
-        this.logger = getLogger('plugin:' + this.key);
+        this.logger = _getLogger('plugin:' + this.key);
         this.errors = errors;
     }
     /**
