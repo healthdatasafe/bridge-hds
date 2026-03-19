@@ -29,12 +29,12 @@
   "author": "Health Data Safe",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "backloop.dev": "^2.0.6",
     "@pryv/boiler": "^1.2.6",
+    "backloop.dev": "^2.0.6",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-promise-router": "^4.1.1",
-    "hds-lib": "git+https://github.com/healthdatasafe/hds-lib-js.git",
+    "hds-lib": "github:healthdatasafe/hds-lib-js",
     "memored": "^1.1.1",
     "short-unique-id": "^5.2.0"
   },
