@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-19
+
+### Changed
+- Updated hds-lib dependency to 0.2.0 (converter engine support)
+
 ## [0.4.0] - 2026-03-11
 
 ### Changed
