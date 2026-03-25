@@ -1,0 +1,42 @@
+{
+  "appId": null,
+  "type": "lib",
+  "description": "Shared bridge library — provides onboarding, credential storage, and sync framework",
+  "produces": {
+    "items": [],
+    "eventTypes": [
+      "credentials/pryv-api-endpoint",
+      "temp-status/bridge-auth-request",
+      "error/message-object",
+      "sync-status/bridge",
+      "note/txt"
+    ]
+  },
+  "consumes": {
+    "items": [],
+    "eventTypes": [
+      "credentials/pryv-api-endpoint"
+    ]
+  },
+  "streams": [
+    {
+      "id": "{mainStreamId}",
+      "name": "Bridge main stream (configurable)",
+      "note": "mainStreamId is set via service:bridgeAccountMainStreamId config",
+      "children": [
+        {
+          "id": "{mainStreamId}-users",
+          "name": "Users",
+          "children": [
+            { "id": "{mainStreamId}-users-{partnerUserId}", "name": "Per-user stream (dynamic)" }
+          ]
+        },
+        { "id": "{mainStreamId}-users-active", "name": "Active users" },
+        { "id": "{mainStreamId}-errors", "name": "Errors" }
+      ]
+    }
+  ],
+  "access": {
+    "note": "Permissions are configured per bridge via service:userPermissionRequest. Bridge account itself requires manage on mainStreamId."
+  }
+}
