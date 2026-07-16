@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser, bridgeIsConfigured } from './helpers/testServer.ts';
 import ShortUniqueId from 'short-unique-id';
 import boiler from '@pryv/boiler';
 const { getConfig } = boiler;
@@ -9,7 +9,8 @@ describe('[USEX] Users', function () {
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
   let mainStreamId: string | null = null;
 
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer();
     // get the main streamId for the userPermissionRequest servic
     const config = await getConfig();

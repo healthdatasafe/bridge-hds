@@ -30,6 +30,25 @@ async function init (plugin?: PluginBridge, configDir?: string): Promise<void> {
 }
 
 /**
+ * Whether a real bridge account is configured. The integration tests below
+ * onboard users against the bridge account identified by `bridgeApiEndPoint`
+ * — a live Pryv apiEndpoint that only exists in a developer's gitignored
+ * `localConfig.yml`, never in the repo (it embeds an auth token). Without it,
+ * `pryvService.init()` throws `Cannot find endpoint, invalid URL format`.
+ *
+ * Call from a `before` hook as `if (!(await bridgeIsConfigured())) this.skip()`
+ * so those tests SKIP with a clear reason instead of hard-failing — the suite
+ * stays meaningful (unit tests gate; integration tests light up only when a
+ * dev has provisioned an account). `npm run setup-dev-env` + `config/sample-localConfig.yml`.
+ */
+async function bridgeIsConfigured (): Promise<boolean> {
+  const { getConfig } = initBoiler(`bridge-cfg-check:${process.pid}`);
+  const cfg = await getConfig();
+  const ep = cfg.get<string>('bridgeApiEndPoint');
+  return typeof ep === 'string' && /^https?:\/\//.test(ep) && !ep.includes('OVERRIDE_ME');
+}
+
+/**
  * Get a supertest Request bound to the server app
  */
 function apiTest (options?: Record<string, unknown>) {
@@ -108,6 +127,7 @@ async function createOnboardedUser () {
 
 export {
   init,
+  bridgeIsConfigured,
   apiTest,
   configGet,
   pryvService,

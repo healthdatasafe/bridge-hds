@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { init as initTestServer } from './helpers/testServer.ts';
+import { init as initTestServer, bridgeIsConfigured } from './helpers/testServer.ts';
 import * as plugins from '../src/lib/plugins.ts';
 
 describe('[PLGX] Plugins', () => {
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer(); // will init plugins
   });
 

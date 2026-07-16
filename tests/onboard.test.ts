@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { init as initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import { init as initTestServer, apiTest, configGet, createUserAndPermissions, partnerAuth, createOnboardedUser, bridgeIsConfigured } from './helpers/testServer.ts';
 import { startHttpServerCapture } from './helpers/testWebServerCapture.ts';
 import ShortUniqueId from 'short-unique-id';
 import { pryv } from 'hds-lib';
@@ -9,14 +9,15 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function
   this.timeout(5000);
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
   let captureServer: Awaited<ReturnType<typeof startHttpServerCapture>>;
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer();
     captureServer = await startHttpServerCapture();
   });
 
   after(async function () {
     this.timeout(2000);
-    await captureServer.close();
+    if (captureServer) await captureServer.close();
   });
 
   it('[ONBU] POST /user/onboard', async function () {
@@ -142,7 +143,8 @@ describe('[ONBX] Onboarding User with capture server on (Webhooks OK)', function
 
 describe('[ONBE] Onboarding User with failing Webhooks', () => {
   const testRnd = (new ShortUniqueId({ dictionary: 'alphanum_lower', length: 8 })).rnd();
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer();
   });
 

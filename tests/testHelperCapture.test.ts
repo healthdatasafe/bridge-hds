@@ -3,19 +3,20 @@
  * Do not go in infinite loop!
  */
 import assert from 'node:assert/strict';
-import { init as initTestServer } from './helpers/testServer.ts';
+import { init as initTestServer, bridgeIsConfigured } from './helpers/testServer.ts';
 import { startHttpServerCapture } from './helpers/testWebServerCapture.ts';
 
 describe('[TESX] Testing mockup server for webhooks', () => {
   let webServerCapture: Awaited<ReturnType<typeof startHttpServerCapture>>;
   const port = 8365;
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer();
     webServerCapture = await startHttpServerCapture({ port });
   });
 
   after(async () => {
-    await webServerCapture.close();
+    if (webServerCapture) await webServerCapture.close();
   });
 
   it(`[TESW] POST http://localhost:${port}/test`, async () => {

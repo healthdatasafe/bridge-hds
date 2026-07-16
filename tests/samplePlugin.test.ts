@@ -1,5 +1,5 @@
 import boiler from '@pryv/boiler';
-import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser } from './helpers/testServer.ts';
+import { init as initTestServer, apiTest, partnerAuth, createOnboardedUser, bridgeIsConfigured } from './helpers/testServer.ts';
 import SampleBridge from './sample-bridge/index.ts';
 import assert from 'node:assert/strict';
 
@@ -7,7 +7,8 @@ const { getConfig } = boiler;
 
 describe('[PLTX] SampleBridge test', () => {
   let mainStreamId: string | null = null;
-  before(async () => {
+  before(async function () {
+    if (!(await bridgeIsConfigured())) this.skip();
     await initTestServer(new SampleBridge());
     // get the main streamId for the userPermissionRequest servic
     const config = await getConfig();
