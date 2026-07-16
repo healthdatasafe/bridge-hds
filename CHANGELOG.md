@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-07-16
+
+### Fixed
+- **Re-pinned `hds-lib` to 1.3.1**, which unbreaks `model.itemsDefs` against the live
+  data-model pack ([site-agents#3](https://github.com/healthdatasafe/site-agents/issues/3)).
+  hds-lib's `streamId:eventType` index rejected the deprecated rename-aliases that
+  data-model 2.0.0 publishes, so every `itemsDefs` access threw. Bridges reading the model
+  (`bridge-mira`, `bridge-chartneo`) inherited the break **through this lockfile**: npm
+  honours a git dependency's own `package-lock.json` when running its `prepare`, so the old
+  hds-lib was baked in no matter what the consuming bridge did. Bumping here is what
+  actually releases the fix downstream. No API changes.
+
 ## [0.6.2] - 2026-06-19
 
 ### Changed
