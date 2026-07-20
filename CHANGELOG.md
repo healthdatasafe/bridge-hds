@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-20
+
+### Added
+- **Cluster crash-loop detection, backoff & escalation.** The cluster master no longer
+  respawns crashing workers unconditionally (which could hide an infinite crash-loop for
+  hours while emitting no monitoring signal). It now:
+  - detects a crash-loop (default: 5 crashes within 30s),
+  - fires **one** New Relic `noticeError` per incident (via an optional `require('newrelic')`
+    behind a try/catch — non-monitored deploys are unaffected),
+  - reforks with exponential backoff (1→2→4→8→16s, capped at 30s) instead of immediately,
+    resetting once a worker survives 60s,
+  - and, when `start:exitOnCrashLoop: true` (opt-in, **default false**), exits the master
+    with code 1 after the loop persists 5 min so the orchestrator marks the app down.
+
+  Graceful worker exits (`exitedAfterDisconnect`) and SIGTERM/SIGINT are excluded, so the
+  master doesn't fight an intentional stop/restart. Detection logic lives in a pure,
+  unit-tested `src/lib/crashLoopMonitor.ts`. No API changes; healthy-bridge behaviour is
+  unchanged.
+
 ## [0.6.3] - 2026-07-16
 
 ### Fixed
