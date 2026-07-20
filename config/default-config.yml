@@ -12,6 +12,11 @@ start:
   # if numProcesses>0 launch exactly numProcess processes
   # if numProcesses<0 launch max(numCPU + numProcess, 1) process(es)
   numProcesses: 0
+  # When a worker crash-loop persists (default: 5 crashes/30s, unbroken for 5 min),
+  # exit the master with code 1 so the orchestrator (Dokku) marks the app down.
+  # Default false: the master keeps self-healing (bounded backoff + noticeError).
+  # Opt in per bridge (e.g. bridge-mira) for hard-fail monitoring.
+  exitOnCrashLoop: false
 
 # Logging
 logs:
