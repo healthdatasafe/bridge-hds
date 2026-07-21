@@ -38,7 +38,9 @@ async function init (): Promise<void> {
   const config = await getConfig();
   settings.requestingAppId = config.get<string>('service:appId');
   settings.consentMessage = config.get<string>('service:consentMessage');
-  settings.returnURL = config.get<string>('baseURL') + '/user/onboard/finalize/';
+  // Accept both `baseURL` (lib convention) and `baseUrl` (bridge convention).
+  const exposedUrl = config.get<string>('baseURL') ?? config.get<string>('baseUrl');
+  settings.returnURL = exposedUrl + '/user/onboard/finalize/';
 
   settings.apiAccessURL = (await pryvService.service().info()).access;
   settings.partnerURLs = config.get('partnerURLs');

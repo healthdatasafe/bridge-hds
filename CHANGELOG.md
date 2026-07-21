@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-21
+
+### Fixed
+- **Exposed-URL config now accepts both `baseURL` and `baseUrl`.** The lib read
+  `baseURL` (capital) for the `Api is exposed on` log line and the onboarding
+  `returnURL`, but bridge consumers (e.g. bridge-mira, which uses the same value
+  for its OAuth `redirect_uri`) configure `baseUrl` (lowercase) — so the lib saw
+  `undefined` (logged `Api is exposed on: undefined`, and would have built a
+  malformed onboard `returnURL`). Both read sites now fall back
+  `baseURL ?? baseUrl`, and the log states when neither is set. No API change.
+
 ## [0.7.0] - 2026-07-20
 
 ### Added
