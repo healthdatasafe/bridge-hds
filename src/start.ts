@@ -124,7 +124,11 @@ export default async function startCluster (plugin?: PluginBridge, configDir?: s
     });
   } else {
     await server.launch(plugin);
-    logger.info(`Api is exposed on: ${config.get('baseURL')}`);
+    // Accept both the lib convention (`baseURL`) and the bridge convention
+    // (`baseUrl`, used by bridge-mira for its OAuth redirect_uri) so the exposed
+    // URL resolves whichever casing the consumer configured.
+    const exposedUrl = config.get('baseURL') ?? config.get('baseUrl');
+    logger.info(`Api is exposed on: ${exposedUrl ?? '(baseURL/baseUrl not configured)'}`);
   }
 }
 
