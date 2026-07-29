@@ -15,6 +15,7 @@ import accountRouter from './routes/accountRoute.ts';
 import userRouter from './routes/userRoute.ts';
 import { expressErrorHandler } from './errors/index.ts';
 import loggerMiddleware from './middlewares/logger.ts';
+import { observabilityTiming, initBridgeObservability, type ObsHolder } from './lib/observability.ts';
 import type PluginBridge from './lib/PluginBridge.ts';
 
 const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf-8'));
@@ -50,6 +51,11 @@ async function createBridgeApp (plugin?: PluginBridge): Promise<Application> {
   newApp.use(cors());
   newApp.use(express.json());
 
+  // Aggregate telemetry (plan 88): time every request; the emitter is built
+  // after routes are registered and read live through the holder.
+  const obsHolder: ObsHolder = { obs: null };
+  newApp.use(observabilityTiming(obsHolder));
+
   // keep first
   newApp.use(loggerMiddleware);
   newApp.use(checkAuth.checkIfPartner);
@@ -69,6 +75,11 @@ async function createBridgeApp (plugin?: PluginBridge): Promise<Application> {
 
   // ------------ must be last ------- //
   newApp.use(expressErrorHandler);
+
+  // Routes (incl. plugin routes) are all registered now — build the emitter
+  // from their patterns. No-op when no collector endpoint is configured.
+  await initBridgeObservability(newApp, pkg, obsHolder);
+
   app = newApp;
   return app;
 }
