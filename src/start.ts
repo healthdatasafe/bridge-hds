@@ -1,27 +1,17 @@
 import initBoiler from './initBoiler.ts';
 import cluster from 'cluster';
 import os from 'os';
-import { createRequire } from 'module';
 import * as server from './server.ts';
 import type PluginBridge from './lib/PluginBridge.ts';
 import { initCacheMaster } from './lib/cache.ts';
 import { createCrashLoopMonitor, type CrashLoopIncident } from './lib/crashLoopMonitor.ts';
 
-const require = createRequire(import.meta.url);
-
-/** Optionally-present New Relic agent (only installed on monitored bridge deploys). */
-interface NewRelicAgent {
-  noticeError: (error: Error, customAttributes?: Record<string, string | number | boolean>) => void
-  shutdown: (opts: { collectPendingData?: boolean }, cb: () => void) => void
-}
-
-function loadNewRelic (): NewRelicAgent | null {
-  try {
-    return require('newrelic') as NewRelicAgent;
-  } catch {
-    return null; // not installed — non-monitored deploy
-  }
-}
+// New Relic APM agent removed (plan 88): no vendor SDK runs in the process.
+// Crash-loops are now detected by the host collector's container-uptime metric
+// (`container.uptime`, alert condition 15120471); this master only logs the
+// incident locally and, on escalation, exits so the orchestrator marks the app
+// down. Per-request telemetry is emitted by `hds-observability-js` in the
+// workers (see `server.ts`).
 
 function incidentAttrs (incident: CrashLoopIncident): Record<string, string | number> {
   return {
@@ -51,8 +41,6 @@ export default async function startCluster (plugin?: PluginBridge, configDir?: s
     const numProcesses = configNumProcesses < 0 ? Math.max(numCPUs + configNumProcesses, 1) : configNumProcesses;
     const exitOnCrashLoop = config.get<boolean>('start:exitOnCrashLoop') === true;
 
-    const newrelic = loadNewRelic();
-
     const monitor = createCrashLoopMonitor({
       exitOnCrashLoop,
       now: () => Date.now(),
@@ -71,27 +59,17 @@ export default async function startCluster (plugin?: PluginBridge, configDir?: s
         monitor.workerForked(worker.id);
       },
       onNoticeError: (incident) => {
-        if (newrelic == null) return;
-        newrelic.noticeError(
-          new Error(`Cluster crash-loop detected: ${incident.loopCount} crashes in ${incident.windowMs}ms`),
+        logger.error(
+          `Cluster crash-loop detected: ${incident.loopCount} crashes in ${incident.windowMs}ms`,
           incidentAttrs(incident)
         );
       },
       onEscalate: (incident) => {
-        logger.error(`Crash-loop escalation: exiting master ${process.pid} so the orchestrator marks the app down`);
-        const exit = (): void => process.exit(1);
-        if (newrelic != null) {
-          newrelic.noticeError(
-            new Error(`Cluster crash-loop escalation: ${incident.loopCount} crashes, exiting master`),
-            incidentAttrs(incident)
-          );
-          // hard fallback in case the agent's shutdown hangs — NOT unref'd, so the
-          // process stays alive to flush then exits 1 (unref'ing risks a stray exit 0).
-          setTimeout(exit, 5_000);
-          newrelic.shutdown({ collectPendingData: true }, exit);
-        } else {
-          exit();
-        }
+        logger.error(
+          `Crash-loop escalation: exiting master ${process.pid} so the orchestrator marks the app down`,
+          incidentAttrs(incident)
+        );
+        process.exit(1);
       },
       logger: {
         info: (m) => logger.info(m),
