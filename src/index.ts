@@ -5,6 +5,13 @@ export { default as startCluster } from './start.ts';
 export { default as initBoiler } from './initBoiler.ts';
 export * as errors from './errors/index.ts';
 
+// Observability primitives (plan 88) — the single fence-4-compliant implementation
+// (route-pattern allow-list, unmatched-drop). Exported so standalone Express services
+// that do NOT boot through createBridgeApp (e.g. datasets-service, bridge-athenahealth)
+// can install the same timing middleware + emitter instead of copying the logic.
+export { observabilityTiming, initBridgeObservability } from './lib/observability.ts';
+export type { ObsHolder } from './lib/observability.ts';
+
 // Re-export essentials for consumers
 export { initHDSModel, getHDSModel, pryv } from 'hds-lib';
 export { default as Router } from 'express-promise-router';

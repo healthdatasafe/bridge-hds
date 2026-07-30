@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-30
+
+### Added
+- **Export the observability primitives** `observabilityTiming`, `initBridgeObservability`
+  and the `ObsHolder` type from the public API (plan 88). Standalone Express services that
+  don't boot through `createBridgeApp` (e.g. `datasets-service`, `bridge-athenahealth`) can
+  now install the same fence-4-compliant timing middleware + OTLP emitter instead of copying
+  the route-pattern allow-list logic — keeping a single audited implementation of what leaves
+  the process.
+
+## [0.8.0] - 2026-07-29
+
+### Changed
+- **Replaced the New Relic APM agent with `hds-observability-js`** (plan 88). `createBridgeApp`
+  installs an early `observabilityTiming` middleware and, after routes are mounted, builds an
+  OTLP emitter from the registered route **patterns** (never concrete paths — fence 4), exporting
+  `hds.calls` / `hds.call.duration` to the host collector. No vendor SDK runs in the process;
+  a no-op unless `HDS_OTEL_ENDPOINT` / `observability:endpoint` is set. New Relic removed from
+  `start.ts` (crash-loops now covered by the collector's container-uptime alert condition).
+
 ## [0.7.1] - 2026-07-21
 
 ### Fixed
