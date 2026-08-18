@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-08-18
+
+### Fixed
+- `userExists()` no longer asks the registry's `check_username`, which is answered from
+  the **serving core's local** user index and therefore reports users hosted on another
+  core as non-existent. On a multi-core platform whose registry hostname round-robins
+  across cores, the old implementation returned a different answer depending on which
+  core replied. It now delegates to `pryv.Service.userExists()`, i.e.
+  `POST {register}/{username}/server`, which resolves through the platform-wide store and
+  is correct on every core.
+  No caller in the HDS workspace uses this export today, so this is a latent trap in the
+  library's public API rather than an observed failure — but it would have misfired the
+  moment a bridge relied on it. Upstream: https://github.com/pryv/open-pryv.io/issues/122
+
 ## [0.8.1] - 2026-07-30
 
 ### Added

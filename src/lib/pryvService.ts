@@ -81,12 +81,21 @@ async function createuser (username: string | null, password: string | null, ema
 }
 
 /**
- * Utility to check if a user exists on a Pryv pltafom
+ * Utility to check if a user exists on a Pryv platform.
+ *
+ * Delegates to `pryv.Service.userExists()`, which asks
+ * `POST {register}/{username}/server` — resolved through the platform-wide
+ * store, so it is correct on every core.
+ *
+ * It must NOT use the registry's `check_username`: that is answered from the
+ * serving core's *local* user index, so on a multi-core platform it reports
+ * users hosted on another core as non-existent. Our registry hostname
+ * round-robins across two cores, so the old implementation returned a
+ * different answer depending on which core replied.
+ * Upstream: https://github.com/pryv/open-pryv.io/issues/122
  */
 async function userExists (userId: string): Promise<boolean> {
-  const userExistsRes = await (await fetch(infosSingleton.register + userId + '/check_username')).json() as any;
-  if (typeof userExistsRes.reserved === 'undefined') throw Error('Pryv invalid user exists response ' + JSON.stringify(userExistsRes));
-  return userExistsRes.reserved;
+  return await service().userExists(userId);
 }
 
 /**
