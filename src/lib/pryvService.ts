@@ -87,12 +87,14 @@ async function createuser (username: string | null, password: string | null, ema
  * `POST {register}/{username}/server` — resolved through the platform-wide
  * store, so it is correct on every core.
  *
- * It must NOT use the registry's `check_username`: that is answered from the
- * serving core's *local* user index, so on a multi-core platform it reports
- * users hosted on another core as non-existent. Our registry hostname
- * round-robins across two cores, so the old implementation returned a
- * different answer depending on which core replied.
- * Upstream: https://github.com/pryv/open-pryv.io/issues/122
+ * Prefer this over the registry's `check_username`. `check_username` answers
+ * *availability*, not existence, and it was outright wrong on a multi-core
+ * platform until pryv/open-pryv.io#122 (fixed upstream, deployed to the HDS
+ * cores 2026-08-20): it read only the serving core's local user index, and a
+ * round-robin registry hostname made the answer depend on which core replied.
+ * That is fixed, but `/server` remains the right call here — it is the
+ * existence question we actually mean, and it is also correct against an older
+ * core that predates the fix.
  */
 async function userExists (userId: string): Promise<boolean> {
   return await service().userExists(userId);
