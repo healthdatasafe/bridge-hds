@@ -87,23 +87,57 @@ function streamIdForUserId (partnerUserId: string): string {
 
 /**
  * Ensure base structure is created
+ *
+ * Every cluster worker runs init() and therefore races to create the same three
+ * streams. A loser of that race does not reliably get `item-already-exists`: on
+ * a fresh account the server may surface the storage-level unique-constraint
+ * violation as `unexpected-error` instead, which used to kill the worker with
+ * "Failed creating base streams" (observed on prod 2026-08-28, bridgemiraprod2).
+ *
+ * So don't classify by error id — verify the end state. If every base stream
+ * exists once the batch returns, the streams are there and how they got there
+ * doesn't matter. Only a genuinely missing stream is an error.
  */
 async function ensureBaseStreams (): Promise<void> {
-  const apiCalls = [{
+  const required = [
+    { id: settings.userParentStreamId!, name: 'Bridge Users' },
+    { id: settings.activeUsersStreamId!, name: 'Active Bridge Users' },
+    { id: settings.errorStreamId!, name: 'Bridge Errors' }
+  ];
+  const apiCalls = required.map(s => ({
     method: 'streams.create',
-    params: { parentId: settings.mainStreamId, id: settings.userParentStreamId, name: 'Bridge Users' }
-  }, {
-    method: 'streams.create',
-    params: { parentId: settings.mainStreamId, id: settings.activeUsersStreamId, name: 'Active Bridge Users' }
-  }, {
-    method: 'streams.create',
-    params: { parentId: settings.mainStreamId, id: settings.errorStreamId, name: 'Bridge Errors' }
-  }];
+    params: { parentId: settings.mainStreamId, id: s.id, name: s.name }
+  }));
   const res: any = await _bridgeConnection!.api(apiCalls as any);
   const unexpectedErrors = res.filter((r: any) => r.error && r.error.id !== 'item-already-exists');
-  if (unexpectedErrors.length > 0) {
-    serviceError('Failed creating base streams', unexpectedErrors);
+  if (unexpectedErrors.length === 0) return;
+
+  const missing = await missingBaseStreams(required.map(s => s.id));
+  if (missing.length > 0) {
+    serviceError('Failed creating base streams', { missing, errors: unexpectedErrors });
   }
+  logger().warn(
+    'ensureBaseStreams: streams.create reported errors but all base streams exist ' +
+    '(concurrent worker start-up); continuing.',
+    unexpectedErrors
+  );
+}
+
+/**
+ * Of the given streamIds, return those that do not exist on the bridge account.
+ */
+async function missingBaseStreams (streamIds: string[]): Promise<string[]> {
+  const res: any = await _bridgeConnection!.api([{ method: 'streams.get', params: {} }] as any);
+  if (res[0]?.error) return streamIds;
+  const found = new Set<string>();
+  const walk = (streams: Array<{ id: string, children?: unknown[] }> = []): void => {
+    for (const s of streams) {
+      found.add(s.id);
+      walk(s.children as Array<{ id: string, children?: unknown[] }>);
+    }
+  };
+  walk(res[0]?.streams);
+  return streamIds.filter(id => !found.has(id));
 }
 
 /**

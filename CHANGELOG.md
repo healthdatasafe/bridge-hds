@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-08-28
+
+### Fixed
+- `ensureBaseStreams()` no longer kills a worker when several cluster workers race to
+  create the same base streams. Every worker runs `init()`, so on a bridge account whose
+  base streams don't exist yet they all issue the same three `streams.create` calls at
+  once. The losers of that race are not guaranteed to get `item-already-exists`: the
+  server may surface the storage-level unique-constraint violation as `unexpected-error`
+  instead, which the old error-id filter passed straight through to `serviceError` —
+  crashing the worker with `Failed creating base streams`.
+
+  Observed on production 2026-08-28 when `bridge-mira` was repointed at a freshly created
+  account: one worker died with `duplicate key value violates unique constraint
+  "streams_pkey"` (statusCode 501, `id: 'unexpected-error'`). With
+  `start.exitOnCrashLoop: true` a persistent version of this takes the whole app down.
+
+  The fix stops classifying by error id and verifies the end state instead: if the base
+  streams all exist once the batch returns, that is success regardless of how they got
+  there, and only a genuinely missing stream is an error. This stays correct whether or
+  not the server-side error mapping is fixed upstream.
+
 ## [0.8.2] - 2026-08-18
 
 ### Fixed
