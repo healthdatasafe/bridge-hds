@@ -24,21 +24,55 @@ interface StatusAndPryvConnection extends UserStatus {
   connection: InstanceType<typeof pryv.Connection>;
 }
 
+const CREDENTIAL_TYPE = 'credentials/pryv-api-endpoint';
+
 /**
- * Add user credentials to partner account
+ * Add (or refresh) a user's data-grant credential on the bridge account.
+ *
+ * **Idempotent by identity, not just by content.** Callers rely on this: the CMC inbox
+ * watcher re-processes recent accept events after every restart, and runs independently in
+ * each cluster worker, so the same accept legitimately reaches here several times.
+ *
+ * This used to be an unconditional `events.create`, which meant every one of those calls
+ * appended another credential event. On prod 2026-08-28 a single accept produced a new
+ * event every 30s per worker — 10 duplicates within minutes, growing without bound — while
+ * this function's own docstring claimed it "overwrites the credential event". Reads use
+ * `limit: 1` so nothing broke visibly; the account just grew forever. It is also the most
+ * likely origin of the duplicate records previously noticed on the old prod account.
+ *
+ * Now: reuse the existing credential event when there is one, updating it in place (and
+ * re-asserting the active-users stream, so a previously deactivated user is reactivated
+ * rather than duplicated). Only create when none exists.
  */
 async function addCredentialToBridgeAccount (partnerUserId: string, appApiEndpoint: string): Promise<unknown> {
   const streamUserId = streamIdForUserId(partnerUserId);
-  const apiCalls = [{
+  const streamIds = [streamUserId, getActiveUserStreamId()];
+
+  // Ensure the per-user stream exists, and look for a credential already stored there.
+  const pre: any = await bridgeConnection().api([{
     method: 'streams.create',
     params: { id: streamUserId, parentId: getUserParentStreamId(), name: partnerUserId }
   }, {
+    method: 'events.get',
+    params: { streams: [streamUserId], types: [CREDENTIAL_TYPE], limit: 1 }
+  }] as any);
+
+  const existing = pre[1]?.events?.[0];
+  if (existing?.id != null) {
+    const updated: any = await bridgeConnection().api([{
+      method: 'events.update',
+      params: { id: existing.id, update: { content: appApiEndpoint, streamIds } }
+    }] as any);
+    if (updated[0]?.error?.id != null) throw serviceError('Failed add user credentials', updated[0]);
+    return updated[0];
+  }
+
+  const created: any = await bridgeConnection().api([{
     method: 'events.create',
-    params: { streamIds: [streamUserId, getActiveUserStreamId()], type: 'credentials/pryv-api-endpoint', content: appApiEndpoint }
-  }];
-  const result: any = await bridgeConnection().api(apiCalls as any);
-  if (result[1]?.error?.id) throw serviceError('Failed add user credentials', result[1]);
-  return result[1];
+    params: { streamIds, type: CREDENTIAL_TYPE, content: appApiEndpoint }
+  }] as any);
+  if (created[0]?.error?.id != null) throw serviceError('Failed add user credentials', created[0]);
+  return created[0];
 }
 
 async function exists (partnerUserId: string): Promise<boolean> {

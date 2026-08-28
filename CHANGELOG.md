@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-08-28
+
+### Fixed
+- `addCredentialToBridgeAccount` is now genuinely idempotent, as its docstring already
+  claimed. It was an unconditional `events.create`, so every repeat call appended another
+  `credentials/pryv-api-endpoint` event. Callers depend on repeat calls: the CMC inbox
+  watcher re-processes recent accepts after each restart and runs independently in every
+  cluster worker.
+
+  On prod 2026-08-28 one accept produced a new credential event every 30s per worker — 10
+  duplicates within minutes, growing without bound (~5,700/day per connected user). Nothing
+  broke visibly because reads use `limit: 1` and take the newest; the account simply grew
+  forever. This is also the most likely origin of the duplicate records previously noticed
+  on the old prod bridge account.
+
+  It now reuses an existing credential event and updates it in place, re-asserting the
+  active-users stream so a previously deactivated user is reactivated rather than
+  duplicated, and creates only when none exists.
+
 ## [0.8.4] - 2026-08-28
 
 ### Fixed
