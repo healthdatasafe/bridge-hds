@@ -54,6 +54,42 @@ function errorCodeOf (code: number): FrameworkErrorCode {
 }
 
 /**
+ * Segment count of a path, ignoring empty segments so a trailing slash does not
+ * change the count (`/authReturn/` and `/authReturn` are both one segment).
+ */
+function segmentCount (p: string): number {
+  return p.split('/').filter(s => s.length > 0).length;
+}
+
+/**
+ * The mount prefix for this request, e.g. `/mira`.
+ *
+ * `req.baseUrl` is the direct answer and is correct for a request that completed
+ * normally — but NOT for one that errored. When a handler calls `next(err)`, Express
+ * unwinds the router to reach the app-level error handler and restores `req.baseUrl` to
+ * `''` on the way out; `res.on('finish')` fires after that. So an errored request on a
+ * mounted router used to be named `GET /authReturn/` instead of `GET /mira/authReturn/`,
+ * which matches nothing in the collected method list and was refused as `unknown_method`.
+ *
+ * The consequence was the worst possible one for observability: the requests that FAILED
+ * were exactly the ones silently dropped, so `hds.calls` could never show an error rate
+ * for any mounted route. Observed on prod 2026-08-28.
+ *
+ * Recovery: `req.originalUrl` is never rewritten, so when `baseUrl` is empty but the
+ * original path has more segments than the route pattern, the extra leading segments are
+ * the mount prefix. Counting segments (rather than string-matching) keeps this correct for
+ * patterns containing params, whose concrete values differ from the pattern text.
+ */
+function mountPrefix (req: Request, routePath: string): string {
+  if (req.baseUrl != null && req.baseUrl !== '') return req.baseUrl;
+  const original = (req.originalUrl ?? '').split('?')[0] ?? '';
+  const originalSegs = original.split('/').filter(s => s.length > 0);
+  const extra = originalSegs.length - segmentCount(routePath);
+  if (extra <= 0) return '';
+  return '/' + originalSegs.slice(0, extra).join('/');
+}
+
+/**
  * Timing middleware. Add it EARLY (before routes) so it spans the whole
  * request; it records on `finish`, by which point `req.route` is resolved. It
  * closes over a holder so it can be installed before the emitter exists.
@@ -67,7 +103,7 @@ export function observabilityTiming (holder: ObsHolder): RequestHandler {
       try {
         const route = req.route as { path?: string } | undefined;
         if (route?.path == null) return; // unmatched path: not a known method
-        const method = `${req.method} ${req.baseUrl}${route.path}`;
+        const method = `${req.method} ${mountPrefix(req, route.path)}${route.path}`;
         obs.recordCall(method, statusClassOf(res.statusCode), performance.now() - start);
         if (res.statusCode >= 400) obs.recordError(errorCodeOf(res.statusCode));
       } catch { /* telemetry must never break a response */ }

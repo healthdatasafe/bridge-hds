@@ -56,6 +56,52 @@ describe('[OBS] observability middleware', () => {
     assert.equal(errs[0], 'UNAUTHORIZED');
   });
 
+  it('keeps the mount prefix on an ERRORED mounted request (baseUrl already unwound)', async () => {
+    const calls: Array<[string, string]> = [];
+    // Express restores req.baseUrl to '' while unwinding a router to reach the app-level
+    // error handler, and `finish` fires after that — so a failed request on a mounted
+    // router arrives here with an empty baseUrl. Naming it from baseUrl alone produced
+    // 'GET /authReturn/', which matched no collected method and was dropped as
+    // unknown_method: telemetry lost precisely the requests that failed. Observed on
+    // prod 2026-08-28.
+    await run(
+      { method: 'GET', baseUrl: '', originalUrl: '/mira/authReturn?code=x', route: { path: '/authReturn/' } } as Partial<Request>,
+      fakeRes(500),
+      stubHolder(calls)
+    );
+    assert.deepEqual(calls, [['GET /mira/authReturn/', '5xx']]);
+  });
+
+  it('keeps using baseUrl when it survived (successful mounted request)', async () => {
+    const calls: Array<[string, string]> = [];
+    await run(
+      { method: 'GET', baseUrl: '/mira', originalUrl: '/mira/health', route: { path: '/health' } } as Partial<Request>,
+      fakeRes(200),
+      stubHolder(calls)
+    );
+    assert.deepEqual(calls, [['GET /mira/health', '2xx']]);
+  });
+
+  it('recovers a multi-segment mount and keeps param patterns intact', async () => {
+    const calls: Array<[string, string]> = [];
+    await run(
+      { method: 'GET', baseUrl: '', originalUrl: '/a/b/user/42/status', route: { path: '/user/:id/status' } } as Partial<Request>,
+      fakeRes(500),
+      stubHolder(calls)
+    );
+    assert.deepEqual(calls, [['GET /a/b/user/:id/status', '5xx']]);
+  });
+
+  it('leaves an app-level route unprefixed', async () => {
+    const calls: Array<[string, string]> = [];
+    await run(
+      { method: 'GET', baseUrl: '', originalUrl: '/status', route: { path: '/status' } } as Partial<Request>,
+      fakeRes(200),
+      stubHolder(calls)
+    );
+    assert.deepEqual(calls, [['GET /status', '2xx']]);
+  });
+
   it('skips an unmatched request (no req.route) — nothing to name as a method', async () => {
     const calls: Array<[string, string]> = [];
     await run({ method: 'GET', baseUrl: '', route: undefined }, fakeRes(404), stubHolder(calls));

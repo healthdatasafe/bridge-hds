@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-08-28
+
+### Fixed
+- Telemetry no longer drops the requests that FAILED. `observabilityTiming` named a call
+  `${req.method} ${req.baseUrl}${route.path}` inside `res.on('finish')`. That is correct for
+  a request that completed normally, but when a handler calls `next(err)` Express unwinds
+  the router to reach the app-level error handler and restores `req.baseUrl` to `''` on the
+  way out — and `finish` fires after that. So an errored request on a mounted router was
+  named `GET /authReturn/` rather than `GET /mira/authReturn/`, matched nothing in the
+  collected method list, and was refused as `unknown_method`.
+
+  The failure mode was the worst possible one for observability: successful mounted
+  requests were recorded, failed ones were silently discarded, so `hds.calls` could never
+  show an error rate for any mounted route — precisely the signal alerting needs. Found on
+  prod 2026-08-28 (`observability drop [unknown_method]: GET /authReturn/`) while
+  investigating why bridge-mira reported no metrics.
+
+  The mount prefix is now recovered from `req.originalUrl`, which Express never rewrites:
+  when `baseUrl` is empty and the original path has more segments than the route pattern,
+  the extra leading segments are the mount. Segment counting (not string matching) keeps it
+  correct for patterns containing params, whose concrete values differ from the pattern
+  text. `baseUrl` is still preferred whenever it survived.
+
 ## [0.8.3] - 2026-08-28
 
 ### Fixed
