@@ -7,3 +7,6 @@
 /localConfig.yml
 storage-migrations/application.log
 **/.DS_Store
+
+# The backloop.dev secret is never committed (plan 95).
+backloop.dev.json

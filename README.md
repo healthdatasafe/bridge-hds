@@ -203,3 +203,24 @@ npm run lint             # Lint
 ```
 
 The test suite includes `SampleBridge` in `tests/sample-bridge/` — a minimal bridge that demonstrates how to use the library. It follows the same pattern as real bridges like bridge-chartneo.
+
+## HTTPS for local development
+
+`backloop.dev` is opt-in. Set `BACKLOOP=true` (as `npm run start:backloop` does) and the server
+listens over HTTPS on `https://mira.backloop.dev:<port>`, a hostname that resolves to `127.0.0.1`.
+Leave it unset and the server listens on plain HTTP on `127.0.0.1`, so nothing is required to run
+this library.
+
+Certificates come from the [`backloop.dev`](https://github.com/perki/backloop.dev-node) package,
+installed directly from GitHub rather than npm. With no configuration it downloads a shared,
+self-signed certificate; install it once per machine by following <https://backloop.dev/public/>.
+Firefox will not accept it, because it ignores the system trust store. To use your own certificate
+instead, point `BACKLOOP_DEV_CERT` and `BACKLOOP_DEV_KEY` at the PEM files.
+
+If you are updating an existing checkout, delete the stale copy first. npm does not replace a
+package that moved from the registry to a git URL: it leaves the old directory in place while
+`npm ls` reports the new version.
+
+```sh
+rm -rf node_modules/backloop.dev && npm install
+```
